@@ -1,7 +1,6 @@
 package com.ecnu.traceability.transportation;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 

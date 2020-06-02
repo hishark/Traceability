@@ -22,7 +22,7 @@ public class HTTPUtils {
         httpExecutor.get(url,callback);
     }
 
-    private static void sendByOKHttp(final String url, RequestBody data, Callback callback) {
+    public static void sendByOKHttp(final String url, RequestBody data, Callback callback) {
         httpExecutor.post(url,data,callback);
 
     }

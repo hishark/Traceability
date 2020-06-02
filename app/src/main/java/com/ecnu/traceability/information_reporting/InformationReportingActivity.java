@@ -9,9 +9,16 @@ import android.widget.EditText;
 
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 
+import java.io.IOException;
 import java.util.Date;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class InformationReportingActivity extends AppCompatActivity implements Button.OnClickListener {
 
@@ -32,9 +39,24 @@ public class InformationReportingActivity extends AppCompatActivity implements B
 
     @Override
     public void onClick(View view) {
-        String info=text.getText().toString();
-        Date date=new Date(text.getText().toString());
-        dbHelper.getSession().getReportInfoEntityDao().insert(new ReportInfoEntity(info,date));
+        String info = text.getText().toString();
+        Date date = new Date(text.getText().toString());
+        dbHelper.getSession().getReportInfoEntityDao().insert(new ReportInfoEntity(info, date));
 
+    }
+
+    public void sendInfoToServer(RequestBody data) {
+//        String url="";//网址加mac地址
+//        HTTPUtils.sendByOKHttp("", data, new Callback() {
+//            @Override
+//            public void onFailure(Call call, IOException e) {
+//
+//            }
+//
+//            @Override
+//            public void onResponse(Call call, Response response) throws IOException {
+//
+//            }
+//        });
     }
 }

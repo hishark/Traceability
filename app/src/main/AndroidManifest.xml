@@ -26,8 +26,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".information_reporting.InformationReportingActivity"></activity>
-
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
             android:value="" /> <!-- OneNET api scheme -->
@@ -49,10 +47,11 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".judge.JudgeActivity"></activity>
+        <activity android:name=".information_reporting.InformationReportingActivity" />
         <service android:name="com.amap.api.location.APSService" /> <!-- 忘记添加服务的标签时不报错，但是不运行 -->
         <service
             android:name=".bluetooth.service.IBluetoothService"
@@ -62,7 +61,6 @@
             android:exported="false" /> <!-- <service -->
         <!-- android:name="com.ecnu.traceability.location.service.TestService" -->
         <!-- android:exported="false"></service> -->
-        <service android:name=".location.service.ExposureJudgement" />
     </application>
 
 </manifest>
