@@ -17,12 +17,13 @@ import com.chinamobile.iot.onenet.OneNetApi;
 import com.chinamobile.iot.onenet.OneNetApiCallback;
 import com.chinamobile.iot.onenet.http.Config;
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.BaseActivity;
-import com.ecnu.traceability.bluetooth.ConnectA2dpActivity;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.location.service.ExposureJudgement;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 
@@ -51,103 +52,29 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.btn_connectA2dp).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                startActivity(ConnectA2dpActivity.class);
-                sendData();
-
+                List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+                OneNetDeviceUtils.sendData(locationList);
             }
         });
         dbHelper.init(this);
         Intent bluetoothIntent = new Intent(this, IBluetoothService.class);
         Intent locationIntent = new Intent(this, ILocationService.class);
-        //        Bundle bundle = new Bundle();
-        //        bundle.putString("abc","test");
-        //        intent.putExtras(bundle);
         startService(bluetoothIntent);
         startService(locationIntent);
         Log.e(TAG, "------------------------start---------------------");
 
         String mac = MacAddress.getBtAddressByReflection();
-        if(mac!=null) {
+        if (mac != null) {
             Log.e(TAG, mac);
-        }else{
-            Toast.makeText(getApplicationContext(),"null!", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "null!", Toast.LENGTH_LONG).show();
         }
 
+        OneNetDeviceUtils.addDevice();
+//        Intent testIntent = new Intent(this, ExposureJudgement.class);
+//        startService(testIntent);
     }
 
-    private void sendData() {
-//        String deviceId = mDeviceIdLayout.getEditText().getText().toString().trim();
-//        String datastream = mDataStreamLayout.getEditText().getText().toString().trim();
-        String deviceId = "598576209";
-        String datastream = "data_flow_1";
-        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-//        if (TextUtils.isEmpty(deviceId)) {
-//            mDeviceIdLayout.setError(getResources().getString(R.string.device_id));
-//            mDeviceIdLayout.requestFocus();
-//            return;
-//        }
-//        if (TextUtils.isEmpty(datastream)) {
-//            mDataStreamLayout.setError(getResources().getString(R.string.datastream));
-//            mDataStreamLayout.requestFocus();
-//            return;
-//        }
-        try {
-
-
-            JSONArray datapoints = new JSONArray();
-
-
-            for (LocationEntity latlon : locationList) {
-                JSONObject location = new JSONObject();
-                location.putOpt("lat", latlon.getLatitude());
-                location.putOpt("lon", latlon.getLongitude());
-                JSONObject datapoint = new JSONObject();
-                datapoint.putOpt("value", location);
-                datapoints.put(datapoint);
-            }
-
-            JSONObject dsObject = new JSONObject();
-            dsObject.putOpt("id", datastream);
-            dsObject.putOpt("datapoints", datapoints);
-
-            JSONArray datastreams = new JSONArray();
-            datastreams.put(dsObject);
-
-            JSONObject request = new JSONObject();
-            request.putOpt("datastreams", datastreams);
-
-            OneNetApi.addDataPoints(deviceId, request.toString(), new OneNetApiCallback() {
-                @Override
-                public void onSuccess(String response) {
-//                    displayLog(response);
-                    Log.e(TAG, response);
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-
-                }
-
-                @Override
-                public void onFailed(Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-
-                }
-            });
-        } catch (JSONException e) {
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-
-            e.printStackTrace();
-        }
-    }
 
     @Override
     protected void onResume() {

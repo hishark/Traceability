@@ -26,34 +26,33 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".information_reporting.InformationReportingActivity"></activity>
 
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
-            android:value="JJykqzEoB1hUh4rKH9Byn=CApEA="/>
-
-        <!-- OneNET api scheme -->
+            android:value="qsCeEuesQROBsUFzN4TcFaq2WzE=" /> <!-- OneNET api scheme -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.SCHEME"
-            android:value="https"/>
-
-        <!-- OneNET server host -->
+            android:value="https" /> <!-- OneNET server host -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.HOST"
-            android:value="api.heclouds.com"/>
+            android:value="api.heclouds.com" />
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="4743a38538ac1099a87dc63435e04e7e" />
 
         <activity
             android:name=".location.ui.MapActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_mapactivity"
-            android:theme="@style/FullscreenTheme"></activity>
+            android:theme="@style/FullscreenTheme" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".bluetooth.ConnectA2dpActivity" />
-        <activity android:name=".bluetooth.ScanDeviceActivity" /> <!-- 定位服务错误码10 -->
         <service android:name="com.amap.api.location.APSService" /> <!-- 忘记添加服务的标签时不报错，但是不运行 -->
         <service
             android:name=".bluetooth.service.IBluetoothService"
@@ -63,9 +62,7 @@
             android:exported="false" /> <!-- <service -->
         <!-- android:name="com.ecnu.traceability.location.service.TestService" -->
         <!-- android:exported="false"></service> -->
-        <meta-data
-            android:name="com.amap.api.v2.apikey"
-            android:value="6e925f49b718ae8a541226e99c0b47ba" />
+        <service android:name=".location.service.ExposureJudgement" />
     </application>
 
 </manifest>

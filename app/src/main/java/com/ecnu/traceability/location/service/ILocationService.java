@@ -9,13 +9,18 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.geocoder.GeocodeResult;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeQuery;
+import com.amap.api.services.geocoder.RegeocodeResult;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ILocationService extends Service {
+public class ILocationService extends Service implements GeocodeSearch.OnGeocodeSearchListener {
 
     private static final String TAG = "ILocationService";
     private DBHelper dbHelper = DBHelper.getInstance();
@@ -24,12 +29,12 @@ public class ILocationService extends Service {
     //声明AMapLocationClientOption对象
     public AMapLocationClientOption mLocationOption = null;
 
+    public GeocodeSearch geocoderSearch =null;
+
     //声明定位回调监听器
     public AMapLocationListener mLocationListener = new AMapLocationListener() {
         @Override
         public void onLocationChanged(AMapLocation aMapLocation) {
-            //Log.e(TAG, "------------------------data---------------------");
-            //Log.e(TAG,aMapLocation.toString());
             //获取定位时间
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date date = new Date(aMapLocation.getTime());
@@ -45,6 +50,9 @@ public class ILocationService extends Service {
         super.onCreate();
         dbHelper.init(this);
         startLogLocation();
+
+        geocoderSearch = new GeocodeSearch(this);
+        geocoderSearch.setOnGeocodeSearchListener(this);
     }
 
     public void startLogLocation() {
@@ -77,9 +85,34 @@ public class ILocationService extends Service {
         Log.e(TAG, "------------------------onDestroy---------------------");
     }
 
+    /**
+     * 执行这个方法进行逆地理坐标转换
+     * @param point
+     */
+    public void latlonToLocation(LatLonPoint point){
+
+        // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
+        RegeocodeQuery query = new RegeocodeQuery(point, 200,GeocodeSearch.AMAP);
+        geocoderSearch.getFromLocationAsyn(query);
+    }
+
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+        //解析result获取地址描述信息
+        //逆地理信息
+        regeocodeResult.getRegeocodeAddress();
+    }
+
+    @Override
+    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+        //解析result获取地址描述信息
+
     }
 }
