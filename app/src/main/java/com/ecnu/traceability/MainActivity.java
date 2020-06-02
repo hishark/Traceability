@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -13,26 +12,16 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.chinamobile.iot.onenet.OneNetApi;
-import com.chinamobile.iot.onenet.OneNetApiCallback;
-import com.chinamobile.iot.onenet.http.Config;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
-import com.ecnu.traceability.bluetooth.BaseActivity;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
-import com.ecnu.traceability.location.service.ExposureJudgement;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends BaseActivity {
     private static final String TAG = "MainActivity";

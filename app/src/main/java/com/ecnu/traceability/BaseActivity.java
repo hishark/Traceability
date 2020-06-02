@@ -1,4 +1,4 @@
-package com.ecnu.traceability.bluetooth;
+package com.ecnu.traceability;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
