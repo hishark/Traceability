@@ -1,39 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".information_reporting.InformationReportingActivity">
 
-    <Button
-        android:id="@+id/info_reporting_btn"
-        android:layout_width="wrap_content"
+
+    <TextView
+        android:id="@+id/textView_1"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button"
-        tools:layout_editor_absoluteX="161dp"
-        tools:layout_editor_absoluteY="464dp"
-        tools:ignore="MissingConstraints" />
+        android:text="请输入上报的信息" />
 
     <EditText
         android:id="@+id/info_reporting_text"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name"
-        tools:layout_editor_absoluteX="100dp"
-        tools:layout_editor_absoluteY="227dp"
-        tools:ignore="MissingConstraints" />
+        android:layout_below="@id/textView_1"
 
-    <EditText
+        android:ems="10"
+        android:gravity="start|top"
+        android:inputType="textMultiLine" />
+
+    <TextView
+        android:id="@+id/textView_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_below="@id/info_reporting_text"
+
+        android:text="请输入上述信息的关联时间" />
+    <Button
         android:id="@+id/info_reporting_date"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="date"
-        tools:layout_editor_absoluteX="100dp"
-        tools:layout_editor_absoluteY="355dp"
-        tools:ignore="MissingConstraints" />
+        android:layout_centerInParent="true"
+        android:layout_below="@id/textView_2"
+        android:text="选择时间"
+        />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/info_reporting_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_below="@id/info_reporting_date"
+        android:text="提交信息"
+        />
+
+</RelativeLayout>

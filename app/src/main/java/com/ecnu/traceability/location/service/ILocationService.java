@@ -4,7 +4,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
+
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
@@ -20,7 +22,7 @@ import com.ecnu.traceability.location.Dao.LocationEntity;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ILocationService extends Service implements GeocodeSearch.OnGeocodeSearchListener {
+public class ILocationService extends Service {
 
     private static final String TAG = "ILocationService";
     private DBHelper dbHelper = DBHelper.getInstance();
@@ -29,7 +31,6 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
     //声明AMapLocationClientOption对象
     public AMapLocationClientOption mLocationOption = null;
 
-    public GeocodeSearch geocoderSearch =null;
 
     //声明定位回调监听器
     public AMapLocationListener mLocationListener = new AMapLocationListener() {
@@ -38,7 +39,7 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
             //获取定位时间
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date date = new Date(aMapLocation.getTime());
-            LocationEntity entity=new LocationEntity(aMapLocation.getLatitude(),aMapLocation.getLongitude(),date);
+            LocationEntity entity = new LocationEntity(aMapLocation.getLatitude(), aMapLocation.getLongitude(), date);
             dbHelper.getSession().getLocationEntityDao().insert(entity);
             Log.e(TAG, "------------------------add to database---------------------");
         }
@@ -50,9 +51,6 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
         super.onCreate();
         dbHelper.init(this);
         startLogLocation();
-
-        geocoderSearch = new GeocodeSearch(this);
-        geocoderSearch.setOnGeocodeSearchListener(this);
     }
 
     public void startLogLocation() {
@@ -67,8 +65,8 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
         //设置定位模式为AMapLocationMode.Hight_Accuracy，高精度模式。
         mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         //设置定位间隔,单位毫秒,默认为2000ms，最低1000ms。
-        mLocationOption.setInterval(5000);
-        if(null != mLocationClient){
+        mLocationOption.setInterval(10000);
+        if (null != mLocationClient) {
             mLocationClient.setLocationOption(mLocationOption);
             //设置场景模式后最好调用一次stop，再调用start以保证场景模式生效
             mLocationClient.stopLocation();
@@ -85,17 +83,6 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
         Log.e(TAG, "------------------------onDestroy---------------------");
     }
 
-    /**
-     * 执行这个方法进行逆地理坐标转换
-     * @param point
-     */
-    public void latlonToLocation(LatLonPoint point){
-
-        // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
-        RegeocodeQuery query = new RegeocodeQuery(point, 200,GeocodeSearch.AMAP);
-        geocoderSearch.getFromLocationAsyn(query);
-    }
-
 
     @Nullable
     @Override
@@ -103,16 +90,5 @@ public class ILocationService extends Service implements GeocodeSearch.OnGeocode
         return null;
     }
 
-    @Override
-    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
-        //解析result获取地址描述信息
-        //逆地理信息
-        regeocodeResult.getRegeocodeAddress();
-    }
 
-    @Override
-    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
-        //解析result获取地址描述信息
-
-    }
 }

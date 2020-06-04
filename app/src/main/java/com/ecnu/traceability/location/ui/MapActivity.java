@@ -17,7 +17,6 @@ import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
-import com.ecnu.traceability.Utils.LocationKmeans;
 import com.ecnu.traceability.Utils.PathSmoothTool;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
@@ -27,7 +26,7 @@ import java.util.List;
 
 public class MapActivity extends AppCompatActivity {
 
-    public static final String TAG="MapActivity";
+    public static final String TAG = "MapActivity";
 
     private MapView mMapView = null;
     private AMap amap = null;
@@ -56,20 +55,21 @@ public class MapActivity extends AppCompatActivity {
         List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
         List<LatLng> mOriginList = new ArrayList<LatLng>();
 
+        Log.e(TAG, String.valueOf(locationList.size()));
 //        mOriginList.addAll(kmeans(locationList));
 
-        int count=0;
-        double x=0;
-        double y=0;
-        int k=5;
-        for(LocationEntity latlon: locationList){
+        int count = 0;
+        double x = 0;
+        double y = 0;
+        int k = 5;
+        for (LocationEntity latlon : locationList) {
             count++;
-            x+=latlon.getLatitude();
-            y+=latlon.getLongitude();
-            if(count%k==0){
-                mOriginList.add(new LatLng(x/k, y/k));
-                x=0;
-                y=0;
+            x += latlon.getLatitude();
+            y += latlon.getLongitude();
+            if (count % k == 0) {
+                mOriginList.add(new LatLng(x / k, y / k));
+                x = 0;
+                y = 0;
             }
 //            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
         }
@@ -85,29 +85,9 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
-    private List<LatLng> kmeans(List<LocationEntity> locationList){
-        LocationKmeans kmeans=new LocationKmeans();
-        for (LocationEntity entity : locationList) {
-            kmeans.addRecord(new LatLng(entity.getLatitude(), entity.getLongitude()));
-        }
-        kmeans.setK(locationList.size()/1);
-        long a = System.currentTimeMillis();
-        List<List<LatLng>> cresult = kmeans.clustering();
-        List<LatLng> centerList = kmeans.getClusteringCenterT();
-        for(LatLng latlon: centerList){
-            Log.e(TAG,"测试kmeans输出");
-            Log.e(TAG,"测试kmeans输出");
-            Log.e(TAG,"测试kmeans输出");
-            Log.e(TAG,"测试kmeans输出");
-            Log.e(TAG,"测试kmeans输出");
-
-            Log.e(TAG,latlon.latitude+"/"+latlon.longitude);
-        }
-        Log.e(TAG, String.valueOf(centerList.size()));
-        // System.out.println(JsonUtil.parseJson(center));
-        long b = System.currentTimeMillis();
-        System.out.println("耗时：" + (b - a) + "ms");
-        return centerList;
+    private List<LatLng> kmeans(List<LocationEntity> locationList) {
+//        return centerList;
+        return null;
     }
 
     private LatLngBounds getBounds(List<LatLng> pointlist) {

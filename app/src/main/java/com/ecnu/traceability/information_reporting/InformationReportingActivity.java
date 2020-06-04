@@ -2,7 +2,9 @@ package com.ecnu.traceability.information_reporting;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,8 +13,12 @@ import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
+import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
+import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import okhttp3.Call;
@@ -21,9 +27,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class InformationReportingActivity extends AppCompatActivity implements Button.OnClickListener {
+    private static final String TAG = "InformationReporting";
 
     private EditText text = null;
-    private EditText date = null;
+    private String date_ = null;
+    private String time_ = null;
     private DBHelper dbHelper = DBHelper.getInstance();
 
     @Override
@@ -34,14 +42,54 @@ public class InformationReportingActivity extends AppCompatActivity implements B
         dbHelper.init(this);
 
         text = findViewById(R.id.info_reporting_text);
-        date = findViewById(R.id.info_reporting_date);
+        Calendar now = Calendar.getInstance();
+        android.app.DatePickerDialog dateDialog = new android.app.DatePickerDialog(
+                this,
+                (view1, year, month, dayOfMonth) -> {
+                    date_ = year + "-" + month + "-" + dayOfMonth;
+
+                },
+                now.get(Calendar.YEAR),
+                now.get(Calendar.MONTH),
+                now.get(Calendar.DAY_OF_MONTH)
+        );
+
+        android.app.TimePickerDialog timeDialog = new android.app.TimePickerDialog(
+                this,
+                (view11, hour, minute) -> {
+                    time_ = hour + ":" + minute + ":" + 0;
+
+                },
+                now.get(Calendar.HOUR_OF_DAY),
+                now.get(Calendar.MINUTE),
+                true
+        );
+
+
+        Button dateBtn = findViewById(R.id.info_reporting_date);
+        dateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                timeDialog.show();
+                dateDialog.show();
+            }
+        });
+
     }
 
     @Override
     public void onClick(View view) {
         String info = text.getText().toString();
-        Date date = new Date(text.getText().toString());
-        dbHelper.getSession().getReportInfoEntityDao().insert(new ReportInfoEntity(info, date));
+        String infoDate = date_ + " " + time_;
+        String[] dataArray = date_.split("-");
+        String[] timeArray = time_.split(":");
+//        Log.e(TAG, infoDate);
+//        Log.e(TAG,info);
+        Date date = new Date(Integer.parseInt(dataArray[0]), Integer.parseInt(dataArray[1]), Integer.parseInt(dataArray[2]),
+                Integer.parseInt(timeArray[0]), Integer.parseInt(timeArray[1]), Integer.parseInt(timeArray[2]));
+
+        ReportInfoEntity entity = new ReportInfoEntity(info, date);
+        dbHelper.getSession().getReportInfoEntityDao().insert(entity);
 
     }
 
@@ -59,4 +107,5 @@ public class InformationReportingActivity extends AppCompatActivity implements B
 //            }
 //        });
     }
+
 }

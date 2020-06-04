@@ -9,14 +9,70 @@
         android:id="@+id/btn_show_trajectory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
         android:text="活动轨迹展示" />
 
+    <View
+        android:id="@+id/divider_1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_show_trajectory"
+        android:background="?android:attr/listDivider" />
+
     <Button
-        android:id="@+id/btn_connectA2dp"
+        android:id="@+id/btn_update_info_to_server"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/btn_show_trajectory"
+        android:layout_below="@id/divider_1"
         android:text="发送地图数据到OneNet" />
+
+    <View
+        android:id="@+id/divider_2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_update_info_to_server"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/btn_report_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_2"
+        android:text="主动上报数据" />
+
+    <View
+        android:id="@+id/divider_3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_report_info"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/btn_test_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_3"
+        android:text="查看人数统计图表" />
+
+    <View
+        android:id="@+id/divider_4"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_test_1"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/btn_test_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_4"
+        android:text="查看地点统计图表" />
+
+    <View
+        android:id="@+id/divider_5"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_test_2"
+        android:background="?android:attr/listDivider" />
+
 
 </RelativeLayout>

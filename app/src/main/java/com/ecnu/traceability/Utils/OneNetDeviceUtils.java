@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.Callback;
+
 public class OneNetDeviceUtils {
     private static final String TAG = "OneNetDeviceUtils";
 
@@ -119,59 +121,29 @@ public class OneNetDeviceUtils {
     }
 
 
-    public static void sendData(List<LocationEntity> locationList) {
-        String deviceId = "598576209";
-        String datastream = "data_flow_1";
-        try {
-            JSONArray datapoints = new JSONArray();
-            for (LocationEntity latlon : locationList) {
-                JSONObject location = new JSONObject();
-                location.putOpt("lat", latlon.getLatitude());
-                location.putOpt("lon", latlon.getLongitude());
-                JSONObject datapoint = new JSONObject();
-                datapoint.putOpt("value", location);
-                datapoints.put(datapoint);
+    public static void sendData(String deviceId, JSONObject data) {
+
+        OneNetApi.addDataPoints(deviceId, data.toString(), new OneNetApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.e(TAG, response);
+                Log.e(TAG, "=============发送成功=============");
+                Log.e(TAG, "=============发送成功=============");
+                Log.e(TAG, "=============发送成功=============");
+                Log.e(TAG, "=============发送成功=============");
+                Log.e(TAG, "=============发送成功=============");
+
             }
 
-            JSONObject dsObject = new JSONObject();
-            dsObject.putOpt("id", datastream);
-            dsObject.putOpt("datapoints", datapoints);
+            @Override
+            public void onFailed(Exception e) {
+                e.printStackTrace();
+                Log.e(TAG, "=============发送失败=============");
+                Log.e(TAG, "=============发送失败=============");
+                Log.e(TAG, "=============发送失败=============");
+                Log.e(TAG, "=============发送失败=============");
 
-            JSONArray datastreams = new JSONArray();
-            datastreams.put(dsObject);
-
-            JSONObject request = new JSONObject();
-            request.putOpt("datastreams", datastreams);
-
-            OneNetApi.addDataPoints(deviceId, request.toString(), new OneNetApiCallback() {
-                @Override
-                public void onSuccess(String response) {
-                    Log.e(TAG, response);
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-                    Log.e(TAG, "=============发送成功=============");
-
-                }
-
-                @Override
-                public void onFailed(Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-                    Log.e(TAG, "=============发送失败=============");
-
-                }
-            });
-        } catch (JSONException e) {
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-            Log.e(TAG, "=============发送失败=============");
-
-            e.printStackTrace();
-        }
+            }
+        });
     }
 }
