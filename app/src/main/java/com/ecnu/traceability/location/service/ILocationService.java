@@ -11,11 +11,6 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.services.core.LatLonPoint;
-import com.amap.api.services.geocoder.GeocodeResult;
-import com.amap.api.services.geocoder.GeocodeSearch;
-import com.amap.api.services.geocoder.RegeocodeQuery;
-import com.amap.api.services.geocoder.RegeocodeResult;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 
@@ -50,10 +45,10 @@ public class ILocationService extends Service {
     public void onCreate() {
         super.onCreate();
         dbHelper.init(this);
-        startLogLocation();
+        startPreciseLocation();
     }
 
-    public void startLogLocation() {
+    public void startPreciseLocation() {
         //初始化定位
         mLocationClient = new AMapLocationClient(getApplicationContext());
         //设置定位回调监听

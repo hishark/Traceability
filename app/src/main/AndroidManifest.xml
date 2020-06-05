@@ -31,7 +31,7 @@
 
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
-            android:value="qsCeEuesQROBsUFzN4TcFaq2WzE=" /> <!-- OneNET api scheme -->
+            android:value="" /> <!-- OneNET api scheme -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.SCHEME"
             android:value="https" /> <!-- OneNET server host -->
@@ -40,7 +40,7 @@
             android:value="api.heclouds.com" />
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="4743a38538ac1099a87dc63435e04e7e" />
+            android:value="" />
 
         <activity
             android:name=".location.ui.MapActivity"
@@ -64,7 +64,7 @@
         <service
             android:name=".location.service.ILocationService"
             android:exported="false" />
-        <service android:name=".data_analyze.LocationAnalysis"
+        <service android:name=".data_analyze.LocationAnalysisService"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.mq.messenger.service" />

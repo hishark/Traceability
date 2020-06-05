@@ -21,12 +21,13 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocodeSearchListener {
-    private static final int DATA_UNIT = 12960;
+public class LocationAnalysisService extends Service implements GeocodeSearch.OnGeocodeSearchListener {
+    private static final int DATA_UNIT = 360;
     private DBHelper dbHelper = DBHelper.getInstance();
 
     private int count = 0;
@@ -44,20 +45,19 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
 
     }
 
-//    ----------------------------------通信相关--------------------------------------------
+    //    ----------------------------------通信相关--------------------------------------------
     private static final int MSG_ID_CLIENT = 1;
     private static final int MSG_ID_SERVER = 2;
     private static final String MSG_CONTENT = "getAddress";
-    private Message mMessage = null;
+    private Messenger clientMessager = null;
 
 
     Messenger mMessenger = new Messenger(new Handler() {
         @Override
         public void handleMessage(Message msg) {
             if (msg != null && msg.arg1 == MSG_ID_CLIENT) {
-                mMessage = msg;
+                clientMessager = msg.replyTo;
                 getDataFromClient();
-                sendDataToClient(locationMap);
             }
         }
     });
@@ -69,7 +69,7 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
 //        String content = (String) mMessage.getData().get(MSG_CONTENT);  //接收客户端的消息
 //        Log.e("IPC", "Message from client: " + content);
         locationMap = new HashMap<String, Integer>();
-//        processData();
+        processData();
     }
 
     public void sendDataToClient(Map<String, Integer> locationMap) {
@@ -77,12 +77,12 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
         Message replyMsg = Message.obtain();
         replyMsg.arg1 = MSG_ID_SERVER;
         Bundle bundle = new Bundle();
-        bundle.putString(MSG_CONTENT, "听到你的消息了");
-//        bundle.putSerializable(MSG_CONTENT, (Serializable) locationMap);
+//        bundle.putString(MSG_CONTENT, "听到你的消息了");
+        bundle.putSerializable(MSG_CONTENT, (Serializable) locationMap);
         replyMsg.setData(bundle);
 
         try {
-            mMessage.replyTo.send(replyMsg);     //回信
+            clientMessager.send(replyMsg);     //回信
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -115,9 +115,7 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
         updateLocationMap(regeocodeResult.getRegeocodeAddress().getCity());
 
         if (index == count) {
-            Object[][] data = processRawData();
             sendDataToClient(locationMap);
-//            showChart(data);
         }
     }
 
@@ -128,17 +126,6 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
         } else {
             locationMap.put(city, 1);
         }
-    }
-
-    public Object[][] processRawData() {
-
-        Object[][] data = new Object[locationMap.size()][2];
-        int index = 0;
-        for (Map.Entry<String, Integer> entry : locationMap.entrySet()) {
-            data[index][0] = entry.getKey();
-            data[index][1] = entry.getValue();
-        }
-        return data;
     }
 
     @Override
@@ -158,16 +145,15 @@ public class LocationAnalysis extends Service implements GeocodeSearch.OnGeocode
     }
 
     public List<LocationEntity> getDataFromDatabase(int page) {
-
         List<LocationEntity> locList = dbHelper.getSession().getLocationEntityDao().queryBuilder()
                 .offset(page * DATA_UNIT).limit(DATA_UNIT).orderAsc(LocationEntityDao.Properties.Date).list();
+        locList.remove(0);//第一个数据往往不准确删除
         return locList;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-
         return mMessenger.getBinder();
     }
 }

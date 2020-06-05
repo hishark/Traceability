@@ -53,10 +53,11 @@ public class MapActivity extends AppCompatActivity {
 
     public void addTrajectory() {
         List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+        locationList.remove(0);//第一个数据往往不正确，直接删除
         List<LatLng> mOriginList = new ArrayList<LatLng>();
 
-        Log.e(TAG, String.valueOf(locationList.size()));
-//        mOriginList.addAll(kmeans(locationList));
+        //        Log.e(TAG, String.valueOf(locationList.size()));
+        //        mOriginList.addAll(kmeans(locationList));
 
         int count = 0;
         double x = 0;
@@ -68,11 +69,15 @@ public class MapActivity extends AppCompatActivity {
             y += latlon.getLongitude();
             if (count % k == 0) {
                 mOriginList.add(new LatLng(x / k, y / k));
+                //                Log.e("计算结果",x / k+"  "+y/k);
                 x = 0;
                 y = 0;
             }
-//            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
+        //            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
         }
+        //        for (LatLng lo:mOriginList){
+        //            Log.e("data",lo.latitude+" "+lo.longitude);
+        //        }
         // 获取轨迹坐标点
         PathSmoothTool mpathSmoothTool = new PathSmoothTool();
         //设置平滑处理的等级
