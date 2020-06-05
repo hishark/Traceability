@@ -2,6 +2,7 @@ package com.ecnu.traceability.bluetooth.service;
 
 import android.app.IntentService;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
@@ -51,7 +52,6 @@ public class IBluetoothService extends IntentService {
 
     }
 
-
     private BroadcastReceiver discoveryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -70,9 +70,14 @@ public class IBluetoothService extends IntentService {
 //                        Log.e(TAG,"found---------------found-------------found");
                         BluetoothDevice bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                         short rssi = intent.getExtras().getShort(BluetoothDevice.EXTRA_RSSI);
-                        BluetoothDeviceEntity deviceInfo = new BluetoothDeviceEntity(rssi, bluetoothDevice);
-                        dbHelper.getSession().getBluetoothDeviceEntityDao().insert(deviceInfo);
-                        break;
+                        // public static final int PHONE = 0x0200;
+                        // 蓝牙设备为PHONE，常量为200
+                        // 当且仅当搜索到蓝牙设备类型为手机时，添加至数据库
+                        if (Integer.toHexString(bluetoothDevice.getBluetoothClass().getMajorDeviceClass()).equals("200")) {
+                            BluetoothDeviceEntity deviceInfo = new BluetoothDeviceEntity(rssi, bluetoothDevice);
+                            dbHelper.getSession().getBluetoothDeviceEntityDao().insert(deviceInfo);
+                            break;
+                        }
                 }
             }
         }
