@@ -12,14 +12,23 @@ import android.widget.EditText;
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
+import com.ecnu.traceability.Utils.OneNetDeviceUtils;
+import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
+import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -75,6 +84,14 @@ public class InformationReportingActivity extends AppCompatActivity implements B
             }
         });
 
+        Button testBtn=findViewById(R.id.info_reporting_btn_one_net);
+        testBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendInfoToServer();
+            }
+        });
+
     }
 
     @Override
@@ -93,7 +110,42 @@ public class InformationReportingActivity extends AppCompatActivity implements B
 
     }
 
-    public void sendInfoToServer(RequestBody data) {
+    public void sendInfoToServer() {
+        List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
+                .orderAsc(ReportInfoEntityDao.Properties.Date).list();
+        String deviceId = "601016239";
+        String datastream = "data_flow_2";
+        JSONArray datapoints = new JSONArray();
+        try {
+            for (ReportInfoEntity reportFromDB : reportInfoList) {
+
+                SimpleDateFormat sfd=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                Log.e(TAG,sfd.format(reportFromDB.getDate()));
+                JSONObject reportInfo = new JSONObject();
+                reportInfo.put("MacAddress", MacAddress.getBtAddressByReflection());
+                reportInfo.put("Description",reportFromDB.getText());
+                reportInfo.put("Date",sfd.format(reportFromDB.getDate()));
+
+                JSONObject datapoint = new JSONObject();
+                datapoint.putOpt("value", reportInfo);
+                datapoints.put(datapoint);
+            }
+
+            JSONObject dsObject = new JSONObject();
+            dsObject.putOpt("id", datastream);
+            dsObject.putOpt("datapoints", datapoints);
+
+            JSONArray datastreams = new JSONArray();
+            datastreams.put(dsObject);
+
+            JSONObject request = new JSONObject();
+            request.putOpt("datastreams", datastreams);
+            OneNetDeviceUtils.sendData(deviceId, request);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 //        String url="";//网址加mac地址
 //        HTTPUtils.sendByOKHttp("", data, new Callback() {
 //            @Override

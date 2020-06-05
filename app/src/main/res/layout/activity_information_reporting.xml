@@ -48,4 +48,14 @@
         android:text="提交信息"
         />
 
+
+    <Button
+        android:id="@+id/info_reporting_btn_one_net"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_below="@id/info_reporting_btn"
+        android:text="测试向oneNet提交信息"
+        />
+
 </RelativeLayout>
