@@ -1,0 +1,72 @@
+
+//上次能用的地图显示
+function filter(data) {
+
+    // 最终数据应该是一个数组
+    var result = [];
+    var dataPoint = null;
+    //循环处理选中的数据源的数据点
+    for (var i = 0; i < data.length; i++) {
+        // 从数据点中取出需要的数据，通过配置键值对使得数据格式符合要求
+        dataPoint = [
+            data[i].value.lon,
+            data[i].value.lat,
+        ]
+        // 将这个数据点添加进结果中
+        result.push(dataPoint);
+    }
+    return result;
+
+}
+
+
+/////////////////////////////////////////合并数据//////////////////////////////////////////
+//条形图暂时能用
+var result = [];
+for (var i = 0; i < data.length; i++) {
+    if (data[i].value.flag == 2) {
+        dataPoint =data[i].value
+        result.push(dataPoint)
+    }
+}
+result.sort(function(a, b){
+    data1=new Date(a.x)
+    data2=new Date(b.x)
+    return data1 <data2 ? -1 : 1;
+})
+return result
+
+//公告板
+var str = ""
+for (var i = 0; i < data.length; i++) {
+    if (data[i].value.flag == 1) {
+    str += "---------"+data[i].value.Description + "--" + data[i].value.Date + "---------";
+    }
+}
+return [{ value: str }]
+
+///////////////////////////////////////////////////////////////////////////////////
+//饼图
+
+var datelist = new Array()
+for (var i = 0; i < data.length; i++) {
+    datelist.push(data[i].at);
+}
+datelist.sort(function (a, b) {
+    var data1 = new Date(a)
+    var data2 = new Date(b)
+    return data1 < data2 ? 1 : -1;
+})
+
+var date_ = datelist[0]
+var result = [];
+//循环处理选中的数据源的数据点
+for (var i = 0; i < data.length; i++) {
+    if (data[i].at === date_&&data[i].update_at==undefined) {
+        result.push(data[i].value)
+        // result.push(data[i].value);
+    }
+
+}
+// 将这个数据点添加进结果中
+return result

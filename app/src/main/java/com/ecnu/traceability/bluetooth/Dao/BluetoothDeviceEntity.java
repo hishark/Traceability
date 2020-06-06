@@ -28,7 +28,11 @@ public class BluetoothDeviceEntity {
         this.deviceName=deviceInfo.getName();
     }
 
-
+    public BluetoothDeviceEntity(String macAddress, String deviceName, Date date) {
+        this.macAddress = macAddress;
+        this.deviceName = deviceName;
+        this.date = date;
+    }
 
     @Generated(hash = 1142439237)
     public BluetoothDeviceEntity(Long id, short signalStrength, String macAddress,

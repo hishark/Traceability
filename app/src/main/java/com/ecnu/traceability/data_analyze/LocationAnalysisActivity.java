@@ -30,6 +30,8 @@ public class LocationAnalysisActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle("访问城市统计");
+
         setContentView(R.layout.activity_location_analysis);
         aaChartView = findViewById(R.id.AAChartView_location);
 
@@ -113,6 +115,7 @@ public class LocationAnalysisActivity extends AppCompatActivity {
     }
 
     public void prepareShow(Map<String, Integer> locationMap){
+//        stopService(new Intent(getBaseContext(), LocationAnalysisService.class));
         Object[][] data = processRawData(locationMap);
         showChart(data);
     }

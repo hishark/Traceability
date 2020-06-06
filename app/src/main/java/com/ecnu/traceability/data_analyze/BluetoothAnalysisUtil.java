@@ -1,37 +1,38 @@
 package com.ecnu.traceability.data_analyze;
 
+import android.app.Service;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
 
-import com.ecnu.traceability.AAChartCoreLib.AAChartCreator.AAChartModel;
-import com.ecnu.traceability.AAChartCoreLib.AAChartCreator.AAChartView;
-import com.ecnu.traceability.AAChartCoreLib.AAChartCreator.AASeriesElement;
-import com.ecnu.traceability.AAChartCoreLib.AAChartEnum.AAChartType;
-import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntityDao;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class BluetoothAnalysisActivity extends AppCompatActivity {
-    private DBHelper dbHelper = DBHelper.getInstance();
+public class BluetoothAnalysisUtil {
+    private DBHelper dbHelper = null;
     BluetoothDeviceEntityDao bluetoothDeviceEntityDao;
     List<BluetoothDeviceEntity> deviceEntityList;
+    public BluetoothAnalysisUtil(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
+    }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bluetooth_analysis);
-        setTitle("接触统计");
+    public Bundle processData() {
         // 接触人数统计v1.0  -  当前设备每天碰到了多少个不同的蓝牙设备 - 按日期进行统计
         // 整个蓝牙设备表里有很多重复的设备，查找的时候需要进行去重
         bluetoothDeviceEntityDao = dbHelper.getSession().getBluetoothDeviceEntityDao();
@@ -99,7 +100,7 @@ public class BluetoothAnalysisActivity extends AppCompatActivity {
             Date before = calendar.getTime();
             // 结果数组
             String d = formatter.format(before);
-            ans[index] = personNums.get(d);
+            ans[index] =  null==personNums.get(d)? 0:personNums.get(d);
 
             String dd = formatter1.format(before);
             arrayList.add(dd);
@@ -107,22 +108,11 @@ public class BluetoothAnalysisActivity extends AppCompatActivity {
             index--;
         }
         Collections.reverse(arrayList);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("countMap", ans);
+        bundle.putSerializable("dateList", arrayList);
+        return bundle;
 
-        AAChartView aaChartView = findViewById(R.id.AAChartView_bluetooth);
-        AAChartModel aaChartModel = new AAChartModel()
-                .chartType(AAChartType.Area)
-                .title("14天接触人数统计")
-                .backgroundColor("#ffffff")//#4b2b7f
-                .categories((String[]) arrayList.toArray(new String[0]))
-                .dataLabelsEnabled(false)
-                .yAxisGridLineWidth(0f)
-                .series(new AASeriesElement[]{
-                        new AASeriesElement()
-                                .name("人数")
-                                .data(ans),
-                });
-        //The chart view object calls the instance object of AAChartModel and draws the final graphic
-        aaChartView.aa_drawChartWithChartModel(aaChartModel);
     }
 
 

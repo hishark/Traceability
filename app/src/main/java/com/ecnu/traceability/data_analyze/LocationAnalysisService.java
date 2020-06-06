@@ -39,7 +39,7 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
     public void onCreate() {
         super.onCreate();
         dbHelper.init(this);
-
+        Log.e("服务创建", "----------------启动----------------");
         geocoderSearch = new GeocodeSearch(this);
         geocoderSearch.setOnGeocodeSearchListener(this);
 
@@ -77,7 +77,6 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
         Message replyMsg = Message.obtain();
         replyMsg.arg1 = MSG_ID_SERVER;
         Bundle bundle = new Bundle();
-//        bundle.putString(MSG_CONTENT, "听到你的消息了");
         bundle.putSerializable(MSG_CONTENT, (Serializable) locationMap);
         replyMsg.setData(bundle);
 
@@ -91,6 +90,8 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
 
 
     public int processData() {
+        this.count = 0;
+        this.index = 0;
         Long count = dbHelper.getSession().getLocationEntityDao().queryBuilder().count();
         int times = (int) Math.ceil(count * 1.0 / DATA_UNIT);
         for (int i = 0; i < times; i++) {
@@ -104,8 +105,7 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
             LatLonPoint point = new LatLonPoint(lat / locList.size(), lon / locList.size());
             latlonToLocation(point);//逆地理编码
         }
-        this.count = 0;
-        this.index = 0;
+        this.count = times;
         return times;
     }
 
@@ -114,6 +114,7 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
         Log.e("LocationAnalysis", regeocodeResult.getRegeocodeAddress().getCity());
         updateLocationMap(regeocodeResult.getRegeocodeAddress().getCity());
 
+        this.index += 1;
         if (index == count) {
             sendDataToClient(locationMap);
         }

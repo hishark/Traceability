@@ -87,4 +87,25 @@
         android:layout_below="@id/btn_test_3"
         android:background="?android:attr/listDivider" />
 
+    <Button
+        android:id="@+id/btn_test_4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_6"
+        android:text="上传接触人数统计到oneNet" />
+    <View
+        android:id="@+id/divider_7"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_test_4"
+        android:background="?android:attr/listDivider" />
+    <Button
+        android:id="@+id/info_reporting_btn_one_net"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_below="@id/divider_7"
+        android:text="测试向oneNet提交信息"
+        />
+
 </RelativeLayout>
