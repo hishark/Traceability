@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">bluetooth</string>
+    <string name="app_name">Traceability</string>
 
     <string name="title_activity_map_trace">MapTrace</string>
     <string name="dummy_button">Dummy Button</string>

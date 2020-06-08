@@ -21,7 +21,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.ecnu.traceability.Utils.DBHelper;
-import com.ecnu.traceability.Utils.MigrationHelper;
+//import com.ecnu.traceability.Utils.MigrationHelper;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
@@ -30,6 +30,7 @@ import com.ecnu.traceability.data_analyze.BluetoothAnalysisUtil;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
 import com.ecnu.traceability.information_reporting.InformationReportingActivity;
+import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 import com.ecnu.traceability.model.LocalDeviceDao;
@@ -122,6 +123,13 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 oneNetDataSender.pushReportAndpersonCountData();
+            }
+        });
+
+        findViewById(R.id.btn_riskLevel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(JudgeActivity.class);
             }
         });
 

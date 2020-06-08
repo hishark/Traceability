@@ -86,6 +86,7 @@ public class BluetoothAnalysisActivity extends AppCompatActivity {
         Date today = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(today);
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
 
         // days14
         ArrayList arrayList = new ArrayList();

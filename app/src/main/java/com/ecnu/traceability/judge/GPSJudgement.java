@@ -4,6 +4,7 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.DateUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +15,9 @@ public class GPSJudgement {
     public static final String TAG = "ExposureJudgement";
     private DBHelper dbHelper = null;
     private static final double EARTH_RADIUS = 6378137;//赤道半径
+
+    // 本地数据库的LocationEntity列表
+    private List<LocationEntity> locationEntityList;
 
     public GPSJudgement(DBHelper dbHelper) {
         this.dbHelper = dbHelper;
@@ -40,8 +44,6 @@ public class GPSJudgement {
     //        Log.e(TAG, String.valueOf(count));
 
     public List<LocationEntity> getDataFromServer() {
-
-
 //        String url="";//网址加mac地址
 //        HTTPUtils.getDataFromServer("", new Callback() {
 //            @Override
@@ -54,8 +56,6 @@ public class GPSJudgement {
 //
 //            }
 //        });
-
-
         //请求服务器的GPS数据
         // mock data
         //        121.38803,31.764645
@@ -65,33 +65,36 @@ public class GPSJudgement {
         //        121.3929,31.752943
         //        121.393904,31.743058
 
+        // 从服务器得到一个患者的位置数据
         List<LocationEntity> list = new ArrayList<LocationEntity>();
-        list.add(new LocationEntity(31.764645, 121.38803, new Date()));
-        list.add(new LocationEntity(31.76231, 121.389532, new Date()));
-        list.add(new LocationEntity(31.75888, 121.392321, new Date()));
-        list.add(new LocationEntity(31.754886, 121.39276, new Date()));
-        list.add(new LocationEntity(31.752943, 121.3929, new Date()));
-        list.add(new LocationEntity(31.743058, 121.393904, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
+        list.add(new LocationEntity(27.624571, 113.855194, new Date()));
 
         return list;
     }
 
+    // 从本地数据库得到数据
     public List<LocationEntity> getDataFromDatabase() {
+        locationEntityList = dbHelper.getSession().getLocationEntityDao().loadAll();
         //mock data
         //        121.390463,31.76409
         //        121.393553,31.764473
         //        121.396975,31.76482
         //        121.39763,31.765103
-        List<LocationEntity> locationList = new ArrayList<LocationEntity>();
-        locationList.add(new LocationEntity(31.764645, 121.38803, new Date()));
-        locationList.add(new LocationEntity(31.76409, 121.390463, new Date()));
-        locationList.add(new LocationEntity(31.764473, 121.393553, new Date()));
-        locationList.add(new LocationEntity(31.76482, 121.396975, new Date()));
-        locationList.add(new LocationEntity(31.765103, 121.39763, new Date()));
-
-
+//        List<LocationEntity> locationList = new ArrayList<LocationEntity>();
+//        locationList.add(new LocationEntity(31.764645, 121.38803, new Date()));
+//        locationList.add(new LocationEntity(31.76409, 121.390463, new Date()));
+//        locationList.add(new LocationEntity(31.764473, 121.393553, new Date()));
+//        locationList.add(new LocationEntity(31.76482, 121.396975, new Date()));
+//        locationList.add(new LocationEntity(31.765103, 121.39763, new Date()));
 //        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-        return locationList;
+        return locationEntityList;
     }
 
     private static double rad(double d) {
@@ -115,19 +118,20 @@ public class GPSJudgement {
 //        return dis;
 //    }
 
-    public int dataJudge(List<PointDistance> list) {
-        int count = 0;
+    public List<String> dataJudge(List<PointDistance> list) {
+        List<String> dateList = new ArrayList<>();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         for (PointDistance pdc : list) {
             if (DateUtils.dataDiff(pdc.entity1.getDate(), pdc.entity2.getDate()) < 10) {
                 pdc.judgeFlag = true;
-                count++;
+                // 把本地的日期添加到dateList
+                dateList.add(formatter.format(pdc.entity2.getDate()));
             }
         }
-
-        return count;
+        return dateList;
     }
 
-    public int judge() {
+    public List<String> judge() {
         List<LocationEntity> serverData = getDataFromServer();
         List<LocationEntity> localData = getDataFromDatabase();
         List<PointDistance> disList = new ArrayList<PointDistance>();
@@ -141,8 +145,7 @@ public class GPSJudgement {
             }
         }
         //判断时间段是否相同
-        int count = dataJudge(disList);
-        return count;
+        List<String> dateList = dataJudge(disList);
+        return dateList;
     }
-
 }
