@@ -99,13 +99,13 @@
         android:layout_height="1dp"
         android:layout_below="@id/btn_test_4"
         android:background="?android:attr/listDivider" />
+
     <Button
         android:id="@+id/info_reporting_btn_one_net"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
         android:layout_below="@id/divider_7"
-        android:text="测试向oneNet提交信息"
-        />
+        android:layout_centerInParent="true"
+        android:text="测试向oneNet提交信息" />
 
 </RelativeLayout>

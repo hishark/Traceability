@@ -1,5 +1,8 @@
 package com.ecnu.traceability.location.Dao;
 
+import com.ecnu.traceability.Utils.StringDateConverter;
+
+import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 
@@ -13,6 +16,7 @@ public class LocationEntity {
     private Long id;
     private Double latitude;
     private Double longitude;
+//    @Convert(converter = StringDateConverter.class, columnType = String.class)
     private Date date;
 
     public LocationEntity(Double latitude, Double longitude, Date date) {

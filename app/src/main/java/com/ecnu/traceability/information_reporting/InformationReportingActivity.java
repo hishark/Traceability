@@ -11,6 +11,7 @@ import android.widget.EditText;
 
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
@@ -51,12 +52,12 @@ public class InformationReportingActivity extends AppCompatActivity implements B
         dbHelper.init(this);
 
         text = findViewById(R.id.info_reporting_text);
+        text.setHeight(300);
         Calendar now = Calendar.getInstance();
         android.app.DatePickerDialog dateDialog = new android.app.DatePickerDialog(
                 this,
                 (view1, year, month, dayOfMonth) -> {
                     date_ = year + "-" + month + "-" + dayOfMonth;
-
                 },
                 now.get(Calendar.YEAR),
                 now.get(Calendar.MONTH),
@@ -67,7 +68,6 @@ public class InformationReportingActivity extends AppCompatActivity implements B
                 this,
                 (view11, hour, minute) -> {
                     time_ = hour + ":" + minute + ":" + 0;
-
                 },
                 now.get(Calendar.HOUR_OF_DAY),
                 now.get(Calendar.MINUTE),
@@ -96,18 +96,34 @@ public class InformationReportingActivity extends AppCompatActivity implements B
 
     @Override
     public void onClick(View view) {
+        //字段验证
         String info = text.getText().toString();
-        String infoDate = date_ + " " + time_;
+        if (info.equals("") || null == info) {
+            text.setHint("信息不能为空");
+            return;
+        }
+        if (null == date_) {
+            GeneralUtils.showToastInService(getApplicationContext(), "请选择日期");
+            return;
+        }
+        if (null == time_) {
+            GeneralUtils.showToastInService(getApplicationContext(), "请选择时间");
+            return;
+        }
+
         String[] dataArray = date_.split("-");
         String[] timeArray = time_.split(":");
-//        Log.e(TAG, infoDate);
-//        Log.e(TAG,info);
         Date date = new Date(Integer.parseInt(dataArray[0]), Integer.parseInt(dataArray[1]), Integer.parseInt(dataArray[2]),
                 Integer.parseInt(timeArray[0]), Integer.parseInt(timeArray[1]), Integer.parseInt(timeArray[2]));
 
         ReportInfoEntity entity = new ReportInfoEntity(info, date);
         dbHelper.getSession().getReportInfoEntityDao().insert(entity);
+        GeneralUtils.showToastInService(getApplicationContext(),"添加成功！");
 
+        //继续初始化
+        text.setText("");
+        this.date_=null;
+        this.time_=null;
     }
 
 //    public void sendInfoToServer() {

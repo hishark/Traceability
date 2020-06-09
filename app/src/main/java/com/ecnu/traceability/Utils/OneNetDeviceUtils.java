@@ -35,14 +35,25 @@ import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
 
 public class OneNetDeviceUtils {
     private static final String TAG = "OneNetDeviceUtils";
+    public static String macAddress;
+
+    public static boolean isExistsDevice(DBHelper dbHelper, String mac) {
+        Log.e("mac", mac);
+        List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
+        if (deviceList.size() == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     public static void addDevice(DBHelper dbHelper, Context context) {
         JSONObject requestContent = new JSONObject();
         String mac = MacAddress.getBluetoothMAC(context);
-
+        macAddress=mac;
         if (null != mac) {
-            List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
-            if (deviceList.size() == 0) {
+            //List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
+            if (!isExistsDevice(dbHelper, mac)) {//该用户的本地数据库中无记录
                 try {
                     //设备名mac地址
                     requestContent.putOpt("title", mac);
@@ -60,12 +71,12 @@ public class OneNetDeviceUtils {
                             int errno = resp.get("errno").getAsInt();
 
                             if (0 == errno) {
-                                JsonObject jsobj= (JsonObject) resp.get("data");
-                                String deviceId= String.valueOf(jsobj.get("device_id"));
-                                dbHelper.getSession().getLocalDeviceDao().insert(new LocalDevice(mac,deviceId));
+                                JsonObject jsobj = (JsonObject) resp.get("data");
+                                String deviceId = String.valueOf(jsobj.get("device_id"));
+                                dbHelper.getSession().getLocalDeviceDao().insert(new LocalDevice(mac, deviceId));
                                 //成功
                                 Log.e("OneNetDeviceUtils", String.valueOf(resp.get("data.device_id")));
-//                                {"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
+                                //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
                                 Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
                             } else {
                                 //未成功
@@ -86,59 +97,54 @@ public class OneNetDeviceUtils {
         } else {
             Log.e("Fatal err:", "mac 地址无法获取");
         }
-
-
     }
 
-    private void getDevices(final boolean loadMore) {
-//        if (loadMore) {
-//            mCurrentPage++;
-//        } else {
-//            mCurrentPage = 1;
-//        }
+    public static void getDevices(Context context, DBHelper dbHelper) {
+        String mac = MacAddress.getBluetoothMAC(context);
+
         Map<String, String> urlParams = new HashMap<>();
-//        urlParams.put("page", String.valueOf(mCurrentPage));
-//        urlParams.put("per_page", "10");
         OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {
             @Override
             public void onSuccess(String response) {
-//                mSwipeRefreshLayout.setRefreshing(false);
                 JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
                 int errno = resp.get("errno").getAsInt();
                 if (0 == errno) {
-                    parseData(resp.get("data").getAsJsonObject(), loadMore);
+                    parseData(resp.get("data").getAsJsonObject(), context, dbHelper, mac);
                 } else {
+                    addDevice(dbHelper, context);
                     String error = resp.get("error").getAsString();
-//                    Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailed(Exception e) {
                 e.printStackTrace();
-//                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }
 
-    private void parseData(JsonObject data, boolean loadMore) {
+    private static void parseData(JsonObject data, Context context, DBHelper dbHelper, String mac) {
         if (null == data) {
             return;
         }
-        int mTotalCount = data.get("total_count").getAsInt();
+        boolean flag = false;
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DeviceItem.class, new DeviceItemDeserializer());
         Gson gson = gsonBuilder.create();
         JsonArray jsonArray = data.get("devices").getAsJsonArray();
-        List<DeviceItem> devices = new ArrayList<>();
+        Log.e("data", String.valueOf(data.get("devices")));
         for (JsonElement element : jsonArray) {
-            devices.add(gson.fromJson(element, DeviceItem.class));
+            DeviceItem device = gson.fromJson(element, DeviceItem.class);
+            if (device.getTitle().equals(mac) && !isExistsDevice(dbHelper, mac)) {
+                LocalDevice locDevice = new LocalDevice(mac, device.getId());
+                dbHelper.getSession().getLocalDeviceDao().insert(locDevice);
+                flag = true;
+            }
         }
-//        if (!loadMore) {
-//             mDeviceItems.clear();
-//        }
-//        mDeviceItems.addAll(devices);
-//        mAdapter.setNewData(mDeviceItems);
+        if (!flag) {
+            addDevice(dbHelper, context);
+        }
     }
 
 
@@ -149,7 +155,7 @@ public class OneNetDeviceUtils {
             public void onSuccess(String response) {
                 Log.e(TAG, response);
                 Log.e(TAG, "=============信息发送成功=============");
-//                GeneralUtils.showToastInService(this,"信息发送成功");
+                //GeneralUtils.showToastInService(this,"信息发送成功");
             }
 
             @Override

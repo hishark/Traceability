@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -14,27 +13,22 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.ecnu.traceability.Utils.DBHelper;
-import com.ecnu.traceability.Utils.MigrationHelper;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
-import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisUtil;
-import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
+import com.ecnu.traceability.data_analyze.LocationAnalysisService;
+import com.ecnu.traceability.data_analyze.RiskReportingService;
 import com.ecnu.traceability.information_reporting.InformationReportingActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
-import com.ecnu.traceability.model.LocalDeviceDao;
-
-import org.greenrobot.greendao.database.StandardDatabase;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -134,58 +128,18 @@ public class MainActivity extends BaseActivity {
         startService(bluetoothIntent);
         startService(locationIntent);
 
+        Intent riskIntent=new Intent(this, RiskReportingService.class);
+        startService(riskIntent);
+
         Log.e(TAG, "------------------------service start---------------------");
 
-//        String mac = MacAddress.getBluetoothMAC(getContext());
-//        if (mac != null) {
-//            Log.e(TAG, mac);
-//        } else {
-//            String macAddress=MacAddress.getMacAddress(getContext());
-//            Toast.makeText(getApplicationContext(), macAddress, Toast.LENGTH_LONG).show();
-//        }
-
-        OneNetDeviceUtils.addDevice(dbHelper,getContext());
-//        Intent testIntent = new Intent(this, ExposureJudgement.class);
-//        startService(testIntent);
+        OneNetDeviceUtils.getDevices(getContext(),dbHelper);
 
         oneNetDataSender = new InfoToOneNet(dbHelper);
         Intent intent = new Intent(this, LocationAnalysisService.class);
         bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
     }
 
-//    public void sendDateToServer() {
-//        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-//
-//        String deviceId = "601016239";
-//        String datastream = "data_flow_1";
-//        JSONArray datapoints = new JSONArray();
-//        try {
-//            for (LocationEntity latlon : locationList) {
-//                JSONObject location = new JSONObject();
-//
-//                location.putOpt("lat", latlon.getLatitude());
-//                location.putOpt("lon", latlon.getLongitude());
-//                JSONObject datapoint = new JSONObject();
-//                datapoint.putOpt("value", location);
-//                datapoints.put(datapoint);
-//            }
-//
-//            JSONObject dsObject = new JSONObject();
-//            dsObject.putOpt("id", datastream);
-//            dsObject.putOpt("datapoints", datapoints);
-//
-//            JSONArray datastreams = new JSONArray();
-//            datastreams.put(dsObject);
-//
-//            JSONObject request = new JSONObject();
-//            request.putOpt("datastreams", datastreams);
-//            OneNetDeviceUtils.sendData(deviceId, request);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     @Override
     protected void onResume() {
@@ -260,186 +214,5 @@ public class MainActivity extends BaseActivity {
         }
     };
 
-//    public void onResciverData(Map<String, Integer> locationMap) {
-//        JSONArray datapoints = processRawData(locationMap);
-////        datapoints=processCountRawData(datapoints);
-//        sendLocationDateToServer(datapoints);
-//    }
-
-//    public JSONArray processCountRawData(JSONArray datapoints) {
-//
-//        BluetoothAnalysisUtil util = new BluetoothAnalysisUtil(dbHelper);
-//        Bundle bundle = util.processData();
-//        Integer[] ans = (Integer[]) bundle.get("countMap");
-//        ArrayList dateList = (ArrayList) bundle.get("dateList");
-//
-//        try {
-//            for (int i = 0; i < dateList.size(); i++) {
-//                JSONObject numCount = new JSONObject();
-//                numCount.putOpt("x", dateList.get(i));
-//                numCount.putOpt("y1", ans[i]);
-//                numCount.putOpt("flag", 2);
-//                JSONObject datapoint = new JSONObject();
-//                datapoint.putOpt("value", numCount);
-//                datapoints.put(datapoint);
-//                Log.e("数据", String.valueOf(datapoints));
-//                Log.e("数据：", String.valueOf(ans[i]));
-////                Log.e("日期数据：", (String) dateList.get(i));
-//            }
-//
-//            return datapoints;
-//        } catch (JSONException ex) {
-//            ex.printStackTrace();
-//        }
-//
-//        return null;
-//    }
-//
-//    public JSONArray processRawData(Map<String, Integer> locationMap) {
-//        JSONArray datapoints = new JSONArray();
-//        try {
-//            for (Map.Entry<String, Integer> entry : locationMap.entrySet()) {
-//                Log.e("data", entry.getKey());
-//                JSONObject location = new JSONObject();
-//                location.putOpt("value", entry.getValue());
-//                location.putOpt("name", entry.getKey());
-//                location.putOpt("color", getColor());
-//
-//                JSONObject datapoint = new JSONObject();
-//                datapoint.putOpt("value", location);
-//                datapoints.put(datapoint);
-//            }
-//
-//            return datapoints;
-//        } catch (JSONException ex) {
-//            ex.printStackTrace();
-//        }
-//
-//        return null;
-//    }
-
-//    //随机生成颜色代码
-//    public String getColor() {
-//        //红色
-//        String red;
-//        //绿色
-//        String green;
-//        //蓝色
-//        String blue;
-//        //生成随机对象
-//        Random random = new Random();
-//        //生成红色颜色代码
-//        red = Integer.toHexString(random.nextInt(256)).toUpperCase();
-//        //生成绿色颜色代码
-//        green = Integer.toHexString(random.nextInt(256)).toUpperCase();
-//        //生成蓝色颜色代码
-//        blue = Integer.toHexString(random.nextInt(256)).toUpperCase();
-//
-//        //判断红色代码的位数
-//        red = red.length() == 1 ? "0" + red : red;
-//        //判断绿色代码的位数
-//        green = green.length() == 1 ? "0" + green : green;
-//        //判断蓝色代码的位数
-//        blue = blue.length() == 1 ? "0" + blue : blue;
-//        //生成十六进制颜色值
-//        String color = "#" + red + green + blue;
-//        return color;
-//    }
-//
-//
-//    public void sendLocationDateToServer(JSONArray datapoints) {
-//
-//        String deviceId = "601016239";
-//        String datastream = "data_flow_3";
-//
-//        try {
-//            JSONObject dsObject = new JSONObject();
-//            dsObject.putOpt("id", datastream);
-//            dsObject.putOpt("datapoints", datapoints);
-//
-//            JSONArray datastreams = new JSONArray();
-//            datastreams.put(dsObject);
-//
-//            JSONObject request = new JSONObject();
-//            request.putOpt("datastreams", datastreams);
-//            OneNetDeviceUtils.sendData(deviceId, request);
-//
-//        } catch (
-//                JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    public JSONArray prepareReportData() {
-//        List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
-//                .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-//        JSONArray datapoints = new JSONArray();
-//        try {
-//            for (ReportInfoEntity reportFromDB : reportInfoList) {
-//
-//                SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-//                Log.e(TAG, sfd.format(reportFromDB.getDate()));
-//                JSONObject reportInfo = new JSONObject();
-//                reportInfo.put("MacAddress", MacAddress.getBtAddressByReflection());
-//                reportInfo.put("Description", reportFromDB.getText());
-//                reportInfo.put("Date", sfd.format(reportFromDB.getDate()));
-//                reportInfo.put("flag", 1);
-//
-//                JSONObject datapoint = new JSONObject();
-//                datapoint.putOpt("value", reportInfo);
-//                datapoints.put(datapoint);
-//            }
-//
-//            return datapoints;
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-//
-//    public void reportData() {
-//        JSONArray datapoints = prepareReportData();
-//        datapoints=processCountRawData(datapoints);
-//        sendReportInfoToServer(datapoints);
-//    }
-//
-//    public void sendReportInfoToServer(JSONArray datapoints) {
-////        List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
-////                .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-//        String deviceId = "601016239";
-//        String datastream = "data_flow_2";
-////        JSONArray datapoints = new JSONArray();
-//        try {
-////            for (ReportInfoEntity reportFromDB : reportInfoList) {
-//
-////                SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-////                Log.e(TAG, sfd.format(reportFromDB.getDate()));
-////                JSONObject reportInfo = new JSONObject();
-////                reportInfo.put("MacAddress", MacAddress.getBtAddressByReflection());
-////                reportInfo.put("Description", reportFromDB.getText());
-////                reportInfo.put("Date", sfd.format(reportFromDB.getDate()));
-////                reportInfo.put("flag", 1);
-////
-////                JSONObject datapoint = new JSONObject();
-////                datapoint.putOpt("value", reportInfo);
-////                datapoints.put(datapoint);
-////            }
-//
-//            JSONObject dsObject = new JSONObject();
-//            dsObject.putOpt("id", datastream);
-//            dsObject.putOpt("datapoints", datapoints);
-//
-//            JSONArray datastreams = new JSONArray();
-//            datastreams.put(dsObject);
-//
-//            JSONObject request = new JSONObject();
-//            request.putOpt("datastreams", datastreams);
-//            OneNetDeviceUtils.sendData(deviceId, request);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
 }

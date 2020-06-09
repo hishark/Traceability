@@ -1,12 +1,10 @@
 package com.ecnu.traceability;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisUtil;
@@ -47,7 +45,7 @@ public class InfoToOneNet {
 
     public void pushMapDateToOneNet() {
         List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-
+        HTTPUtils.addLocationInfoList(locationList);
         String deviceId = "601016239";
         String datastream = "data_flow_1";
         JSONArray datapoints = new JSONArray();

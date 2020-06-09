@@ -1,5 +1,8 @@
 package com.ecnu.traceability.information_reporting.Dao;
 
+import com.ecnu.traceability.Utils.StringDateConverter;
+
+import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 
@@ -12,6 +15,7 @@ public class ReportInfoEntity {
     @Id(autoincrement = true)
     private Long id;
     private String text;
+//    @Convert(converter = StringDateConverter.class, columnType = String.class)
     private java.util.Date date;
 
     public ReportInfoEntity(String text, java.util.Date date) {

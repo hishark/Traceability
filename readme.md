@@ -63,3 +63,182 @@ json数据示例
         }
     ]
 }
+
+ public static void addUser(LocalDevice device) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/user/add";
+        JSONObject requestContent = new JSONObject();
+
+        try {
+            requestContent.put("macAddress", device.getMac());
+            requestContent.put("deviceId", device.getDeviceId());
+            requestContent.put("flag", "true");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+
+        sendByOKHttp(url, requestBody, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+            }
+        });
+    }
+
+    public static void addLocationInfoList(List<LocationEntity> locationEntityList) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/addLocationInfo";
+
+//        getDataFromServer("http://192.168.1.6:8080/TraceabilityServer/test", new Callback() {
+//            @Override
+//            public void onFailure(Call call, IOException e) {
+//            }
+//
+//            @Override
+//            public void onResponse(Call call, Response response) throws IOException {
+//                //获取数据
+//                Log.e("test",response.body().string());
+//                Log.e("test", String.valueOf(response));
+//                Log.e("test", "成功");
+//
+//            }
+//        });
+        JSONArray jsonArray = new JSONArray();
+        JSONObject requestContent = new JSONObject();
+        String macAddress = OneNetDeviceUtils.macAddress;
+
+        try {
+            for (LocationEntity location : locationEntityList) {
+                JSONObject obj = new JSONObject();
+                obj.put("macAddress", macAddress);
+                obj.put("latitude", location.getLatitude());
+                obj.put("longitude", location.getLongitude());
+                obj.put("date", location.getDate());
+                jsonArray.put(obj);
+            }
+
+            requestContent.put("data", jsonArray);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+            Log.e("request", requestContent.toString());
+            sendByOKHttp(url, requestBody, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e("addLocationInfoList", String.valueOf(e));
+                    Log.e("addLocationInfoList", "失败");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    Log.e("addLocationInfoList", String.valueOf(response));
+                    Log.e("addLocationInfoList", "成功");
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    public void addReportInfoList(List<ReportInfoEntity> reportInfoEntityList) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/addReportInfo";
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject requestContent = new JSONObject();
+        String macAddress = OneNetDeviceUtils.macAddress;
+
+        try {
+            for (ReportInfoEntity report : reportInfoEntityList) {
+                JSONObject obj = new JSONObject();
+                obj.put("macAddress", macAddress);
+                obj.put("description", report.getText());
+                obj.put("date", report.getDate());
+                jsonArray.put(obj);
+            }
+
+            requestContent.put("data", jsonArray);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+            sendByOKHttp(url, requestBody, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e("addLocationInfoList", String.valueOf(e));
+                    Log.e("addLocationInfoList", "失败");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    Log.e("addLocationInfoList", String.valueOf(response));
+                    Log.e("addLocationInfoList", "成功");
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void addTransportationinfo(List<TransportationEntity> transportationEntityList) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/addTransportationinfo";
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject requestContent = new JSONObject();
+        String macAddress = OneNetDeviceUtils.macAddress;
+
+        try {
+            for (TransportationEntity transportation : transportationEntityList) {
+                JSONObject obj = new JSONObject();
+                obj.put("macAddress", macAddress);
+                obj.put("No", transportation.getNO());
+                obj.put("seat", transportation.getSeat());
+                obj.put("type", transportation.getType());
+                obj.put("date", transportation.getDate());
+                jsonArray.put(obj);
+            }
+
+            requestContent.put("data", jsonArray);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+            sendByOKHttp(url, requestBody, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e("addLocationInfoList", String.valueOf(e));
+                    Log.e("addLocationInfoList", "失败");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    Log.e("addLocationInfoList", String.valueOf(response));
+                    Log.e("addLocationInfoList", "成功");
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void getPatientMacAddress(Callback callback) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData";
+        getDataFromServer(url, callback);
+    }
+
+    public void queryPatientLocationInfo(String patientMac, Callback callback) {
+        String macAddress = OneNetDeviceUtils.macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData" + macAddress + "/" + patientMac;
+        getDataFromServer(url, callback);
+    }
+
+    public void queryPatientReportInfo(String patientMac, Callback callback) {
+        String macAddress = OneNetDeviceUtils.macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getReportInfo" + macAddress + "/" + patientMac;
+        getDataFromServer(url, callback);
+    }
+
+    public void queryPatientTransportationinfo(String patientMac, Callback callback) {
+        String macAddress = OneNetDeviceUtils.macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getTransportationinfo" + macAddress + "/" + patientMac;
+        getDataFromServer(url, callback);
+    }

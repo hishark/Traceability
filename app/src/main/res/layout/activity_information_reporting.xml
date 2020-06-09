@@ -29,24 +29,33 @@
         android:layout_centerInParent="true"
         android:layout_below="@id/info_reporting_text"
 
-        android:text="请输入上述信息的关联时间" />
+        android:text="请选择上述信息的关联时间" />
+
     <Button
         android:id="@+id/info_reporting_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
         android:layout_below="@id/textView_2"
+        android:layout_centerInParent="true"
+        android:background="@android:color/holo_green_light"
         android:text="选择时间"
-        />
+        android:textColor="@color/mdtp_background_color" />
+    <View
+        android:id="@+id/divider_report_info"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/info_reporting_date"
+        android:background="?android:attr/listDivider" />
 
     <Button
         android:id="@+id/info_reporting_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
         android:layout_below="@id/info_reporting_date"
+        android:layout_centerInParent="true"
+        android:background="@android:color/holo_blue_dark"
         android:text="提交信息"
-        />
+        android:textColor="@color/mdtp_background_color" />
 
 
 
