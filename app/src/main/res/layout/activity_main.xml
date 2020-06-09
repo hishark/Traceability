@@ -80,6 +80,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/divider_5"
         android:text="上传地点统计到oneNet" />
+
     <View
         android:id="@+id/divider_6"
         android:layout_width="match_parent"
@@ -93,6 +94,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/divider_6"
         android:text="上传接触人数统计到oneNet" />
+
     <View
         android:id="@+id/divider_7"
         android:layout_width="match_parent"
@@ -107,5 +109,20 @@
         android:layout_below="@id/divider_7"
         android:layout_centerInParent="true"
         android:text="测试向oneNet提交信息" />
+
+    <View
+        android:id="@+id/divider_8"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_test_4"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/btn_riskLevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_8"
+        android:layout_centerInParent="true"
+        android:text="风险等级查询" />
 
 </RelativeLayout>

@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import com.chinamobile.iot.onenet.OneNetApi;
 import com.chinamobile.iot.onenet.http.Config;
-import com.ecnu.traceability.Utils.MigrationHelper;
+//import com.ecnu.traceability.Utils.MigrationHelper;
 import com.ecnu.traceability.Utils.Preferences;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.LocalDeviceDao;
