@@ -27,6 +27,7 @@ import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.data_analyze.RiskReportingService;
 import com.ecnu.traceability.information_reporting.InformationReportingActivity;
+import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 
@@ -118,7 +119,12 @@ public class MainActivity extends BaseActivity {
                 oneNetDataSender.pushReportAndpersonCountData();
             }
         });
-
+        findViewById(R.id.btn_riskLevel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(JudgeActivity.class);
+            }
+        });
         dbHelper.init(this);
 
         //蓝牙服务
