@@ -31,7 +31,7 @@ public class BluetoothAnalysisActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth_analysis);
-        setTitle("接触统计");
+        setTitle("接触人数统计");
         // 接触人数统计v1.0  -  当前设备每天碰到了多少个不同的蓝牙设备 - 按日期进行统计
         // 整个蓝牙设备表里有很多重复的设备，查找的时候需要进行去重
         bluetoothDeviceEntityDao = dbHelper.getSession().getBluetoothDeviceEntityDao();

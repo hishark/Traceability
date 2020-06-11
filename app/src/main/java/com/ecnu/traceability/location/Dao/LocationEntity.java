@@ -1,6 +1,6 @@
 package com.ecnu.traceability.location.Dao;
 
-import com.ecnu.traceability.Utils.StringDateConverter;
+//import com.ecnu.traceability.Utils.StringDateConverter;
 
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;

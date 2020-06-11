@@ -1,5 +1,6 @@
 package com.ecnu.traceability.data_analyze;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -7,19 +8,41 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+
+import com.ecnu.traceability.R;
+import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
+import com.ecnu.traceability.judge.MACAddressJudge;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class RiskReportingService extends Service {
 
-    int TIME_INTERVAL = 1000*3600*12; // 这是12小时
+    int TIME_INTERVAL = 1000 * 3600 * (1/3600); // 这是12小时
     PendingIntent pendingIntent;
     AlarmManager alarmManager;
-
+    // 当前设备的手机号
+    String curTel;
 
     @Override
     public void onCreate() {
@@ -47,14 +70,16 @@ public class RiskReportingService extends Service {
             String action = intent.getAction();
             if (TEST_ACTION.equals(action)) {
                 //执行特定的任务
-                //查询当前的风险等级，如果风险等级为高，主动向疫情防控服务器发送信息
-                {
-
-
-
-
+                //查询当前的风险等级，如果风险等级为高，主动向疫情防控服务器发送自己的手机号
+                SharedPreferences sharedPreferences = getSharedPreferences("risk_data", MODE_PRIVATE);
+                int RISK_LEVEL = sharedPreferences.getInt("RISK_LEVEL", 0);
+                // 风险等级为3 - 高风险
+                if (RISK_LEVEL == 3) {
+                    // 从SIM卡获取手机号
+                    getCurPhoneNum();
+                    // 向服务器发送自己的手机号
+                    pushTelToServer(curTel);
                 }
-
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + TIME_INTERVAL, pendingIntent);
@@ -64,6 +89,18 @@ public class RiskReportingService extends Service {
             }
         }
     };
+
+    private void pushTelToServer(String tel) {
+        HTTPUtils.addTelephone(tel);
+    }
+
+    private void getCurPhoneNum() {
+        TelephonyManager manager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        curTel = manager.getLine1Number() != null ? manager.getLine1Number() : "无法获取到手机号";
+        // 查看log是否成功取到了手机号，
+        Log.d("telephone", curTel);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
