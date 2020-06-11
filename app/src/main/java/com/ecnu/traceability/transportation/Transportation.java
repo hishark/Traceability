@@ -14,14 +14,11 @@ import java.util.Date;
 /**
  * mock data
  */
-public class Transportation extends Service {
-    private DBHelper dbHelper = DBHelper.getInstance();
+public class Transportation {
+    private DBHelper dbHelper;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        dbHelper.init(this);
-        addTransportationInfo();
+    public Transportation(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     public void addTransportationInfo() {
@@ -37,9 +34,5 @@ public class Transportation extends Service {
         dbHelper.getSession().getTransportationEntityDao().insert(entity5);
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+
 }

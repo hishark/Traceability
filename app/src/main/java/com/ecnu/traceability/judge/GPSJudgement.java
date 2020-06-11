@@ -43,7 +43,7 @@ public class GPSJudgement {
     //        Log.e(TAG, String.valueOf(count));
     //        Log.e(TAG, String.valueOf(count));
 
-    public List<LocationEntity> getDataFromServer() {
+    public List<LocationEntity> getDataFromServer(String patientAddress) {
 //        String url="";//网址加mac地址
 //        HTTPUtils.getDataFromServer("", new Callback() {
 //            @Override
@@ -131,8 +131,8 @@ public class GPSJudgement {
         return dateList;
     }
 
-    public List<String> judge() {
-        List<LocationEntity> serverData = getDataFromServer();
+    public int judge(String patientAddress) {
+        List<LocationEntity> serverData = getDataFromServer(patientAddress);
         List<LocationEntity> localData = getDataFromDatabase();
         List<PointDistance> disList = new ArrayList<PointDistance>();
         //计算距离
@@ -146,6 +146,6 @@ public class GPSJudgement {
         }
         //判断时间段是否相同
         List<String> dateList = dataJudge(disList);
-        return dateList;
+        return dateList.size();
     }
 }

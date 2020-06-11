@@ -4,11 +4,14 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntityDao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 判断当前设备和患者是否有过接触
@@ -91,21 +94,23 @@ public class MACAddressJudge {
     /**
      * 得到接触过的
      */
-    public List<String> getMeetMacList() {
+    public int getMeetMacList() {
         meetList = new ArrayList<>();
         // 从服务器获取到患者的mac address列表 patientsMacList
         getMACAddressFromServer();
         // 从本地数据库里获取到接触过的Mac Address列表
         getDataFromDatabase();
 
+//        Map<String,Integer> meetMap=new HashMap<String,Integer>();
         // 获取到两个列表之后进行比对
         // 得到接触过的Mac Address列表
         for (String macAddress: patientsMacList) {
             if (localMacList.contains(macAddress)) {
-                meetList.add(macAddress);
+//                meetList.add(macAddress);
+//                meetMap.put(macAddress,)
             }
         }
 
-        return meetList;
+        return meetList.size();
     }
 }

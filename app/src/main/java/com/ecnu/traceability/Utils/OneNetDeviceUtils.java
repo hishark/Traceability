@@ -101,7 +101,7 @@ public class OneNetDeviceUtils {
 
     public static void getDevices(Context context, DBHelper dbHelper) {
         String mac = MacAddress.getBluetoothMAC(context);
-
+        macAddress=mac;
         Map<String, String> urlParams = new HashMap<>();
         OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {
             @Override

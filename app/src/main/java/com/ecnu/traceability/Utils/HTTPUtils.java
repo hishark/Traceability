@@ -37,7 +37,6 @@ public class HTTPUtils {
 
     public static void sendByOKHttp(final String url, RequestBody data, Callback callback) {
         httpExecutor.post(url, data, callback);
-
     }
 
     public static void addUser(LocalDevice device) {
@@ -53,7 +52,7 @@ public class HTTPUtils {
         }
 
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
-
+        Log.e("addUser",requestContent.toString());
         sendByOKHttp(url, requestBody, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -70,26 +69,12 @@ public class HTTPUtils {
     public static void addLocationInfoList(List<LocationEntity> locationEntityList) {
         String url = "http://" + IP + ":8080/TraceabilityServer/addLocationInfo";
 
-//        getDataFromServer("http://192.168.1.6:8080/TraceabilityServer/test", new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//                //获取数据
-//                Log.e("test",response.body().string());
-//                Log.e("test", String.valueOf(response));
-//                Log.e("test", "成功");
-//
-//            }
-//        });
         JSONArray jsonArray = new JSONArray();
         JSONObject requestContent = new JSONObject();
         String macAddress = OneNetDeviceUtils.macAddress;
         SimpleDateFormat sd = new SimpleDateFormat(
                 "EEE MMM dd HH:mm:ss Z yyyy", Locale.US);
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
         try {
             for (LocationEntity location : locationEntityList) {
@@ -97,14 +82,14 @@ public class HTTPUtils {
                 obj.put("macAddress", macAddress);
                 obj.put("latitude", location.getLatitude());
                 obj.put("longitude", location.getLongitude());
-                Date date=sd.parse(location.getDate().toString());
-                obj.put("date",sdf.format(date));
+                Date date = sd.parse(location.getDate().toString());
+                obj.put("date", sdf.format(date));
                 jsonArray.put(obj);
             }
 
             requestContent.put("data", jsonArray);
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
-            Log.e("request", requestContent.toString());
+            Log.e("addLocationInfoList", requestContent.toString());
             sendByOKHttp(url, requestBody, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -125,50 +110,56 @@ public class HTTPUtils {
     }
 
 
-    public void addReportInfoList(List<ReportInfoEntity> reportInfoEntityList) {
+    public static void addReportInfoList(List<ReportInfoEntity> reportInfoEntityList) {
         String url = "http://" + IP + ":8080/TraceabilityServer/addReportInfo";
 
         JSONArray jsonArray = new JSONArray();
         JSONObject requestContent = new JSONObject();
         String macAddress = OneNetDeviceUtils.macAddress;
-
+        SimpleDateFormat sd = new SimpleDateFormat(
+                "EEE MMM dd HH:mm:ss Z yyyy", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         try {
             for (ReportInfoEntity report : reportInfoEntityList) {
                 JSONObject obj = new JSONObject();
                 obj.put("macAddress", macAddress);
                 obj.put("description", report.getText());
-                obj.put("date", report.getDate());
+                Date date = sd.parse(report.getDate().toString());
+                obj.put("date", sdf.format(date));
                 jsonArray.put(obj);
             }
 
             requestContent.put("data", jsonArray);
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+            Log.e("addReportInfoList",requestContent.toString());
             sendByOKHttp(url, requestBody, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e("addLocationInfoList", String.valueOf(e));
-                    Log.e("addLocationInfoList", "失败");
+                    Log.e("addReportInfoList", String.valueOf(e));
+                    Log.e("addReportInfoList", "=================失败=================");
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    Log.e("addLocationInfoList", String.valueOf(response));
-                    Log.e("addLocationInfoList", "成功");
+                    Log.e("addReportInfoList", String.valueOf(response));
+                    Log.e("addReportInfoList", "=================成功=================");
                 }
             });
-        } catch (JSONException e) {
+        } catch (JSONException | ParseException e) {
             e.printStackTrace();
         }
     }
 
 
-    public void addTransportationinfo(List<TransportationEntity> transportationEntityList) {
+    public static void addTransportationinfo(List<TransportationEntity> transportationEntityList) {
         String url = "http://" + IP + ":8080/TraceabilityServer/addTransportationinfo";
 
         JSONArray jsonArray = new JSONArray();
         JSONObject requestContent = new JSONObject();
         String macAddress = OneNetDeviceUtils.macAddress;
-
+        SimpleDateFormat sd = new SimpleDateFormat(
+                "EEE MMM dd HH:mm:ss Z yyyy", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         try {
             for (TransportationEntity transportation : transportationEntityList) {
                 JSONObject obj = new JSONObject();
@@ -176,50 +167,61 @@ public class HTTPUtils {
                 obj.put("No", transportation.getNO());
                 obj.put("seat", transportation.getSeat());
                 obj.put("type", transportation.getType());
-                obj.put("date", transportation.getDate());
+                Date date = sd.parse(transportation.getDate().toString());
+                obj.put("date", sdf.format(date));
                 jsonArray.put(obj);
             }
 
             requestContent.put("data", jsonArray);
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+            Log.e("addTransportationinfo",requestContent.toString());
             sendByOKHttp(url, requestBody, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e("addLocationInfoList", String.valueOf(e));
-                    Log.e("addLocationInfoList", "失败");
+                    Log.e("addTransportationinfo", String.valueOf(e));
+                    Log.e("addTransportationinfo", "=================失败=================");
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    Log.e("addLocationInfoList", String.valueOf(response));
-                    Log.e("addLocationInfoList", "成功");
+                    Log.e("addTransportationinfo", String.valueOf(response));
+                    Log.e("addTransportationinfo", "=================成功=================");
                 }
             });
-        } catch (JSONException e) {
+        } catch (JSONException | ParseException e) {
             e.printStackTrace();
         }
     }
 
-    public void getPatientMacAddress(Callback callback) {
+    public static void getPatientMacAddress(Callback callback) {
         String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData";
         getDataFromServer(url, callback);
     }
 
-    public void queryPatientLocationInfo(String patientMac, Callback callback) {
+    public static void queryPatientLocationInfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
         String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData" + macAddress + "/" + patientMac;
         getDataFromServer(url, callback);
     }
 
-    public void queryPatientReportInfo(String patientMac, Callback callback) {
+    public static void queryPatientReportInfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
         String url = "http://" + IP + ":8080/TraceabilityServer/getReportInfo" + macAddress + "/" + patientMac;
         getDataFromServer(url, callback);
     }
 
-    public void queryPatientTransportationinfo(String patientMac, Callback callback) {
+    public static void queryPatientTransportationinfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
         String url = "http://" + IP + ":8080/TraceabilityServer/getTransportationinfo" + macAddress + "/" + patientMac;
         getDataFromServer(url, callback);
+    }
+
+
+    public static void uploadInfoToServer(List<LocationEntity> locationList,
+                                          List<ReportInfoEntity> reportInfoEntityList,
+                                          List<TransportationEntity> transportationEntityList) {
+        addLocationInfoList(locationList);
+        addReportInfoList(reportInfoEntityList);
+        addTransportationinfo(transportationEntityList);
     }
 }

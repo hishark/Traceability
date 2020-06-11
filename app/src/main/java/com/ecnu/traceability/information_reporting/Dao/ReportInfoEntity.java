@@ -15,7 +15,7 @@ public class ReportInfoEntity {
     @Id(autoincrement = true)
     private Long id;
     private String text;
-//    @Convert(converter = StringDateConverter.class, columnType = String.class)
+    @Convert(converter = StringDateConverter.class, columnType = String.class)
     private java.util.Date date;
 
     public ReportInfoEntity(String text, java.util.Date date) {

@@ -12,15 +12,11 @@ import com.ecnu.traceability.location.Dao.LocationEntity;
 
 import java.util.Date;
 
-public class EPayment extends Service {
-    private DBHelper dbHelper = DBHelper.getInstance();
+public class EPayment {
+    private DBHelper dbHelper;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        dbHelper.init(this);
-        addEPaymentInfo();
-
+    public EPayment(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     //mock data
@@ -38,9 +34,4 @@ public class EPayment extends Service {
         dbHelper.getSession().getLocationEntityDao().insert(new LocationEntity(31.743058, 121.393904, new Date()));
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
 }

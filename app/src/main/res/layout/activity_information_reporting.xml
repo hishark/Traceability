@@ -22,24 +22,27 @@
         android:gravity="start|top"
         android:inputType="textMultiLine" />
 
-    <TextView
-        android:id="@+id/textView_2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_below="@id/info_reporting_text"
-
-        android:text="请选择上述信息的关联时间" />
-
     <Button
         android:id="@+id/info_reporting_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/textView_2"
-        android:layout_centerInParent="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="1dp"
         android:background="@android:color/holo_green_light"
         android:text="选择时间"
         android:textColor="@color/mdtp_background_color" />
+
+    <TextView
+        android:id="@+id/textView_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/info_reporting_text"
+
+        android:layout_centerVertical="true"
+        android:layout_marginTop="13dp"
+        android:text="请选择上述信息的关联时间" />
+
     <View
         android:id="@+id/divider_report_info"
         android:layout_width="match_parent"
@@ -52,12 +55,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/info_reporting_date"
-        android:layout_centerInParent="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="29dp"
         android:background="@android:color/holo_blue_dark"
         android:text="提交信息"
         android:textColor="@color/mdtp_background_color" />
 
+    <View
+        android:id="@+id/divider_1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/info_reporting_btn"
+        android:background="?android:attr/listDivider" />
 
+
+    <Button
+        android:id="@+id/info_reporting_to_server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/divider_1"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="83dp"
+        android:background="@android:color/holo_blue_dark"
+        android:text="提交信息到服务器"
+        android:textColor="@color/mdtp_background_color" />
 
 
 </RelativeLayout>

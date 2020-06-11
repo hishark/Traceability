@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ecnu.traceability">
 
-    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS"/>
+<!--    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS"/>-->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -31,7 +31,7 @@
 
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
-            android:value="" /> <!-- OneNET api scheme -->
+            android:value="qsCeEuesQROBsUFzN4TcFaq2WzE=" /> <!-- OneNET api scheme -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.SCHEME"
             android:value="https" /> <!-- OneNET server host -->
@@ -40,7 +40,7 @@
             android:value="api.heclouds.com" />
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="" />
+            android:value="4743a38538ac1099a87dc63435e04e7e" />
 
         <activity
             android:name=".location.ui.MapActivity"

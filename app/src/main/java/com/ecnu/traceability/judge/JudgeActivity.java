@@ -77,10 +77,9 @@ public class JudgeActivity extends AppCompatActivity {
 //        meetMacList.add("54:33:CB:8A:22:E1");
 //        meetMacList.add("54:33:CB:8A:22:E1");
 
-        meetMacList = macAddressJudge.getMeetMacList();
 
-        meetTimeList = new ArrayList<>();
-        meetTimeList = gpsJudgement.judge();
+//        meetTimeList = new ArrayList<>();
+//        meetTimeList = gpsJudgement.judge();
 //        meetTimeList.add("2020-06-08 19:08:12");
 
         // 风险等级判断
