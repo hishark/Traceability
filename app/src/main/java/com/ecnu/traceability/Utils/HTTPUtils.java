@@ -40,6 +40,31 @@ public class HTTPUtils {
 
     }
 
+    public static void addTelephone(String tel) {
+        String url = "http://" + IP + ":8080/TraceabilityServer/sendTel";
+        JSONObject requestContent = new JSONObject();
+
+        try {
+            requestContent.put("cur_telephone", tel);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent.toString());
+
+        sendByOKHttp(url, requestBody, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+            }
+        });
+    }
+
     public static void addUser(LocalDevice device) {
         String url = "http://" + IP + ":8080/TraceabilityServer/user/add";
         JSONObject requestContent = new JSONObject();

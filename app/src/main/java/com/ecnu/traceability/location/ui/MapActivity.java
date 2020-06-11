@@ -41,6 +41,7 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         dbHelper.init(this);
         setContentView(R.layout.activity_mapactivity);
+        setTitle("活动轨迹展示");
         //获取地图控件引用
         mMapView = (MapView) findViewById(R.id.map);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，创建地图

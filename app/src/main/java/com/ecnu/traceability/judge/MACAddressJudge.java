@@ -47,7 +47,7 @@ public class MACAddressJudge {
         patientsMacList = new ArrayList<>();
         patientsMacList.add("54:33:CB:8A:22:E1"); // 我滴手机
         patientsMacList.add("B8:C9:B5:36:03:1C"); // 本地的
-        patientsMacList.add("E0:1F:88:D9:C5:9E"); // 本地的
+        patientsMacList.add("E0:1F:88:D9:C5:9E"); // 邻居手机
         patientsMacList.add("14:23:3B:8A:22:E2"); // 瞎编的
         patientsMacList.add("14:13:1B:1A:12:1E"); // 瞎编的
 

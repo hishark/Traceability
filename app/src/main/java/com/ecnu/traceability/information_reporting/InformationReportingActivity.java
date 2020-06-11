@@ -48,6 +48,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_information_reporting);
+        setTitle("主动上报数据");
         findViewById(R.id.info_reporting_btn).setOnClickListener(this);
         dbHelper.init(this);
 
