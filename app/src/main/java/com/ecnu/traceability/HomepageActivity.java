@@ -53,7 +53,6 @@ public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
     private static final int REQUEST_PERMISSION = 10;
     private DBHelper dbHelper = DBHelper.getInstance();
-    private InfoToOneNet oneNetDataSender = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

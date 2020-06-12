@@ -187,32 +187,21 @@ public class InformationReportingActivity extends AppCompatActivity implements B
                 if (msg.getData() == null) {
                     return;
                 }
-                ////////////////////////////////////////////////////////向OneNet发送信息
+                ////////////////////////////////////////////////////////
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
-//                oneNetDataSender.pushLocationMapData(locationMap);
-                ////////////////////////////////////////////////////////向OneNet发送信息
+                oneNetDataSender.pushLocationMapData(locationMap);//向OneNet发送地点（地图）统计信息
+                ////////////////////////////////////////////////////////
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-//                oneNetDataSender.pushMapDateToOneNet(locationList);
-                ////////////////////////////////////////////////////////向OneNet发送信息
+                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet地点统计（饼图）发送信息
+                ////////////////////////////////////////////////////////
 
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
                         .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-//                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);
+                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
                 ////////////////////////////////////////////////////////
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
 
-                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息
-                HTTPUtils.getPatientMacAddress(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        Log.e("patient_macAddress", e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        Log.e("patient_macAddress", response.body().string());
-                    }
-                });
+                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
             }
         }
     });
@@ -231,58 +220,5 @@ public class InformationReportingActivity extends AppCompatActivity implements B
             mServerMessenger = null;
         }
     };
-
-
-
-
-//    public void sendInfoToServer() {
-//        List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
-//                .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-//        String deviceId = "601016239";
-//        String datastream = "data_flow_2";
-//        JSONArray datapoints = new JSONArray();
-//        try {
-//            for (ReportInfoEntity reportFromDB : reportInfoList) {
-//
-//                SimpleDateFormat sfd=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-//                Log.e(TAG,sfd.format(reportFromDB.getDate()));
-//                JSONObject reportInfo = new JSONObject();
-//                reportInfo.put("MacAddress", MacAddress.getBtAddressByReflection());
-//                reportInfo.put("Description",reportFromDB.getText());
-//                reportInfo.put("Date",sfd.format(reportFromDB.getDate()));
-//
-//                JSONObject datapoint = new JSONObject();
-//                datapoint.putOpt("value", reportInfo);
-//                datapoints.put(datapoint);
-//            }
-//
-//            JSONObject dsObject = new JSONObject();
-//            dsObject.putOpt("id", datastream);
-//            dsObject.putOpt("datapoints", datapoints);
-//
-//            JSONArray datastreams = new JSONArray();
-//            datastreams.put(dsObject);
-//
-//            JSONObject request = new JSONObject();
-//            request.putOpt("datastreams", datastreams);
-//            OneNetDeviceUtils.sendData(deviceId, request);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-
-//        String url="";//网址加mac地址
-//        HTTPUtils.sendByOKHttp("", data, new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//
-//            }
-//        });
-//    }
 
 }

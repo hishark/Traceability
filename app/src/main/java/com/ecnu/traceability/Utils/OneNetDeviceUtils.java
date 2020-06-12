@@ -1,15 +1,11 @@
 package com.ecnu.traceability.Utils;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.chinamobile.iot.onenet.OneNetApi;
 import com.chinamobile.iot.onenet.OneNetApiCallback;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
-import com.ecnu.traceability.location.Dao.LocationEntity;
-import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.model.DeviceItem;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.LocalDeviceDao;
@@ -20,18 +16,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import okhttp3.Callback;
-
-import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
 
 public class OneNetDeviceUtils {
     private static final String TAG = "OneNetDeviceUtils";
@@ -50,7 +40,7 @@ public class OneNetDeviceUtils {
     public static void addDevice(DBHelper dbHelper, Context context) {
         JSONObject requestContent = new JSONObject();
         String mac = MacAddress.getBluetoothMAC(context);
-        macAddress=mac;
+        macAddress = mac;
         if (null != mac) {
             //List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
             if (!isExistsDevice(dbHelper, mac)) {//该用户的本地数据库中无记录
@@ -73,8 +63,11 @@ public class OneNetDeviceUtils {
                             if (0 == errno) {
                                 JsonObject jsobj = (JsonObject) resp.get("data");
                                 String deviceId = String.valueOf(jsobj.get("device_id"));
-                                dbHelper.getSession().getLocalDeviceDao().insert(new LocalDevice(mac, deviceId));
+                                LocalDevice device = new LocalDevice(mac, deviceId);
+                                dbHelper.getSession().getLocalDeviceDao().insert(device);
                                 //成功
+                                HTTPUtils.addUser(device);
+
                                 Log.e("OneNetDeviceUtils", String.valueOf(resp.get("data.device_id")));
                                 //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
                                 Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
@@ -101,7 +94,7 @@ public class OneNetDeviceUtils {
 
     public static void getDevices(Context context, DBHelper dbHelper) {
         String mac = MacAddress.getBluetoothMAC(context);
-        macAddress=mac;
+        macAddress = mac;
         Map<String, String> urlParams = new HashMap<>();
         OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {
             @Override

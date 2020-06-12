@@ -1,7 +1,5 @@
 package com.ecnu.traceability.judge;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -14,22 +12,31 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
-import com.ecnu.traceability.data_analyze.BluetoothAnalysisUtil;
+import com.ecnu.traceability.Utils.GeneralUtils;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
+import com.ecnu.traceability.ePayment.EPayment;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
+import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.transportation.Dao.TransportationEntity;
+import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
+import com.ecnu.traceability.transportation.Transportation;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +46,7 @@ public class JudgeActivity extends AppCompatActivity {
     private GPSJudgement gpsJudgement = null;
     private MACAddressJudge macAddressJudge = null;
     private InfoToOneNet oneNetDataSender = null;
+    private Judge judgeUtils = null;
 
     // 风险等级
     private int RISK_LEVEL = 0; //0:无风险 1:低风险 2:中风险 3:高风险
@@ -65,16 +73,26 @@ public class JudgeActivity extends AppCompatActivity {
         gpsJudgement = new GPSJudgement(dbHelper);
         macAddressJudge = new MACAddressJudge(dbHelper);
 
+        //初始化风险判断模块快
+        judgeUtils = new Judge(getApplicationContext(), dbHelper);
+
         // 初始化界面
         initView();
 
         // 上传数据相关
         oneNetDataSender = new InfoToOneNet(dbHelper);
-        Intent intent = new Intent(this, LocationAnalysisService.class);
-        bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+
+        //判断服务是否运行
+        boolean serviceFlag = GeneralUtils.isServiceRunning(getApplicationContext(), "com.ecnu.traceability.data_analyze.LocationAnalysisService");
+        if (!serviceFlag) {
+            Intent intent = new Intent(this, LocationAnalysisService.class);
+            bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+        }
+
 
         // 计算当前设备的风险等级并更新UI
-        checkCurDeviceRisk();
+        checkCurDeviceRisk(0);
+        updateRiskInfo();
 
         // 测试用，点击卡片切换风险等级
 //        findViewById(R.id.cardview_risklevel).setOnClickListener(new View.OnClickListener() {
@@ -88,28 +106,82 @@ public class JudgeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
-                uploadDataToOnenet();
+                upload();
             }
         });
 
     }
 
+    public void updateRiskInfo() {
+        new Thread(() -> {
+            try {
+                while (true) {
+                    Thread.sleep(10000);
+
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            // 检查是否有变化
+                            double risk = judgeUtils.getRisk();
+
+                            Log.i("judgeActivity risk", String.valueOf(risk));
+                            checkCurDeviceRisk(risk);
+                        }
+                    });
+
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    //调用回调函数将信息发送至自己的服务器和OneNet服务器
+    public void upload() {
+        Transportation transInfo = new Transportation(dbHelper);
+        EPayment paymentInfo = new EPayment(dbHelper);
+        transInfo.addTransportationInfo();
+        paymentInfo.addEPaymentInfo();
+
+        Message message = Message.obtain();
+        message.arg1 = MSG_ID_CLIENT;
+        Bundle bundle = new Bundle();
+        bundle.putString(MSG_CONTENT, "准备发送信息到OneNet和自己的服务器");
+        message.setData(bundle);
+        message.replyTo = mClientMessenger;
+
+        try {
+            mServerMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 判断当前设备的风险等级并更新UI
      */
-    private void checkCurDeviceRisk() {
+    private void checkCurDeviceRisk(double risk) {
         // fake data
         meetMacList = new ArrayList<>();
         meetTimeList = new ArrayList<>();
 
-        meetMacList = macAddressJudge.getMeetMacList();
-        meetTimeList = gpsJudgement.judge();
+        //        meetMacList = macAddressJudge.getMeetMacList();
+        //        meetTimeList = gpsJudgement.judge();
+
 
         // 风险等级判断
         // 判断方法待补充 TODO
         // ... ...
         // 给RISK_LEVEL赋值即可更新风险等级【0:无风险 1:低风险 2:中风险 3:高风险】
-        RISK_LEVEL = 3;
+
+        if (risk == 0) {
+            RISK_LEVEL = 0;
+        } else if (risk < 2) {
+            RISK_LEVEL = 1;
+        } else if (risk >= 3) {
+            RISK_LEVEL = 3;
+        }
+
+        //        RISK_LEVEL = 3;
 
         // 更新sharedpreference中的风险等级
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();
@@ -133,12 +205,14 @@ public class JudgeActivity extends AppCompatActivity {
         TimeAdapter timeAdapter = new TimeAdapter(getApplicationContext(), meetTimeList);
         listViewCloseTime.setAdapter(timeAdapter);
 
-        tvMeetCount.setText(meetTimeList.size()+"");
+        tvMeetCount.setText(meetTimeList.size() + "");
 
     }
-    private static final String MSG_CONTENT = "getAddress";
+
+    //    ---------------------------------------------Messager回调函数开始-------------------------------------------------
     private static final int MSG_ID_CLIENT = 1;
     private static final int MSG_ID_SERVER = 2;
+    private static final String MSG_CONTENT = "getAddress";
     /**
      * 客户端的 Messenger
      */
@@ -149,13 +223,22 @@ public class JudgeActivity extends AppCompatActivity {
                 if (msg.getData() == null) {
                     return;
                 }
+                //信息发送部分
+                ////////////////////////////////////////////////////////向OneNet发送
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
-//                Log.e("IPC", "Message from server: " + locationMap.size());
-//                onResciverData(locationMap);
-                oneNetDataSender.pushLocationMapData(locationMap);
+                oneNetDataSender.pushLocationMapData(locationMap);//向OneNet发送地点（地图）统计信息
+                List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet地点统计（饼图）发送信息
+                List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
+                        .orderAsc(ReportInfoEntityDao.Properties.Date).list();
+                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
+                ////////////////////////////////////////////////////////向服务器发送
+                List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
+                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
             }
         }
     });
+
     //服务端的 Messenger
     private Messenger mServerMessenger;
 
@@ -170,40 +253,7 @@ public class JudgeActivity extends AppCompatActivity {
             mServerMessenger = null;
         }
     };
-
-    private void uploadDataToOnenet() {
-        // 发送地图数据到onenet
-        oneNetDataSender.pushMapDateToOneNet();
-
-        // 主动上报数据不放在这里了
-        // 主动上报数据的按钮放在了首页的右上角
-
-        // 上传地点统计到onenet
-        Message message = Message.obtain();
-        message.arg1 = MSG_ID_CLIENT;
-        Bundle bundle = new Bundle();
-        bundle.putString(MSG_CONTENT, "测试信息");
-        message.setData(bundle);
-        message.replyTo = mClientMessenger;     //指定回信人是客户端定义的
-        try {
-            mServerMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-        // 上传接触人数统计到onenet
-        BluetoothAnalysisUtil util = new BluetoothAnalysisUtil(dbHelper);
-        Bundle bundle1 = util.processData();
-        Integer[] ans = (Integer[]) bundle1.get("countMap");
-        ArrayList dateList = (ArrayList) bundle1.get("dateList");
-        for (int i = 0; i < dateList.size(); i++) {
-            Log.e("数据：", String.valueOf(ans[i]));
-            Log.e("日期数据：", (String) dateList.get(i));
-        }
-
-        // 测试向oneNet提交信息
-        oneNetDataSender.pushReportAndpersonCountData();
-    }
+//    ---------------------------------------------Messager回调函数结束-------------------------------------------------
 
     private void initView() {
         layout_high = findViewById(R.id.layout_high_risk);

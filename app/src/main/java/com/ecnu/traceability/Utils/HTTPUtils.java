@@ -81,12 +81,12 @@ public class HTTPUtils {
         sendByOKHttp(url, requestBody, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
+                Log.i(TAG, e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-
+                Log.i(TAG, response.body().string());
             }
         });
     }
@@ -225,19 +225,24 @@ public class HTTPUtils {
 
     public static void queryPatientLocationInfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
-        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData" + macAddress + "/" + patientMac;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getLocationInfo/" + macAddress + "/" + patientMac;
+        Log.e("queryLocationURL",url);
         getDataFromServer(url, callback);
     }
 
     public static void queryPatientReportInfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
-        String url = "http://" + IP + ":8080/TraceabilityServer/getReportInfo" + macAddress + "/" + patientMac;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getReportInfo/" + macAddress + "/" + patientMac;
+        Log.e("queryreportURL",url);
+
         getDataFromServer(url, callback);
     }
 
     public static void queryPatientTransportationinfo(String patientMac, Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
-        String url = "http://" + IP + ":8080/TraceabilityServer/getTransportationinfo" + macAddress + "/" + patientMac;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getTransportationinfo/" + macAddress + "/" + patientMac;
+        Log.e("queryTransURL",url);
+
         getDataFromServer(url, callback);
     }
 

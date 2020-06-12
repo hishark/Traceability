@@ -56,7 +56,7 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.btn_update_info_to_server).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                oneNetDataSender.pushMapDateToOneNet();
+//                oneNetDataSender.pushMapDateToOneNet();
             }
         });
         findViewById(R.id.btn_report_info).setOnClickListener(new View.OnClickListener() {
@@ -84,18 +84,18 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.btn_test_3).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Message message = Message.obtain();
-                message.arg1 = MSG_ID_CLIENT;
-                Bundle bundle = new Bundle();
-                bundle.putString(MSG_CONTENT, "测试信息");
-                message.setData(bundle);
-                message.replyTo = mClientMessenger;     //指定回信人是客户端定义的
-
-                try {
-                    mServerMessenger.send(message);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+//                Message message = Message.obtain();
+//                message.arg1 = MSG_ID_CLIENT;
+//                Bundle bundle = new Bundle();
+//                bundle.putString(MSG_CONTENT, "测试信息");
+//                message.setData(bundle);
+//                message.replyTo = mClientMessenger;     //指定回信人是客户端定义的
+//
+//                try {
+//                    mServerMessenger.send(message);
+//                } catch (RemoteException e) {
+//                    e.printStackTrace();
+//                }
             }
         });
         findViewById(R.id.btn_test_4).setOnClickListener(new View.OnClickListener() {
@@ -116,12 +116,14 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.info_reporting_btn_one_net).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                oneNetDataSender.pushReportAndpersonCountData();
+
+//                oneNetDataSender.pushReportAndpersonCountData();
             }
         });
         findViewById(R.id.btn_riskLevel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 startActivity(JudgeActivity.class);
             }
         });
@@ -141,9 +143,9 @@ public class MainActivity extends BaseActivity {
 
         OneNetDeviceUtils.getDevices(getContext(),dbHelper);
 
-        oneNetDataSender = new InfoToOneNet(dbHelper);
-        Intent intent = new Intent(this, LocationAnalysisService.class);
-        bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+//        oneNetDataSender = new InfoToOneNet(dbHelper);
+//        Intent intent = new Intent(this, LocationAnalysisService.class);
+//        bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
     }
 
 
@@ -184,44 +186,5 @@ public class MainActivity extends BaseActivity {
                 break;
         }
     }
-
-
-    //    ---------------------------------------------测试用-------------------------------------------------
-    private static final int MSG_ID_CLIENT = 1;
-    private static final int MSG_ID_SERVER = 2;
-    private static final String MSG_CONTENT = "getAddress";
-    /**
-     * 客户端的 Messenger
-     */
-    Messenger mClientMessenger = new Messenger(new Handler() {
-        @Override
-        public void handleMessage(final Message msg) {
-            if (msg != null && msg.arg1 == MSG_ID_SERVER) {
-                if (msg.getData() == null) {
-                    return;
-                }
-                Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
-//                Log.e("IPC", "Message from server: " + locationMap.size());
-//                onResciverData(locationMap);
-                oneNetDataSender.pushLocationMapData(locationMap);
-            }
-        }
-    });
-
-    //服务端的 Messenger
-    private Messenger mServerMessenger;
-
-    private ServiceConnection mMessengerConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(final ComponentName name, final IBinder service) {
-            mServerMessenger = new Messenger(service);
-        }
-
-        @Override
-        public void onServiceDisconnected(final ComponentName name) {
-            mServerMessenger = null;
-        }
-    };
-
 
 }

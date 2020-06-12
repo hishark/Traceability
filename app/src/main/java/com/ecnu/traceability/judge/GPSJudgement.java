@@ -1,23 +1,40 @@
 package com.ecnu.traceability.judge;
 
+import android.util.Log;
+
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.DateUtils;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.google.gson.JsonObject;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+
 
 public class GPSJudgement {
-    public static final int DIS_THRESHOLD = 10;//不开平方距离阈值
+    public static final int DIS_THRESHOLD = 10;//距离阈值设置为10米
+    public static final int TIME_THRESHOLD=10;//时间阈值设置为10秒
     public static final String TAG = "ExposureJudgement";
     private DBHelper dbHelper = null;
     private static final double EARTH_RADIUS = 6378137;//赤道半径
 
     // 本地数据库的LocationEntity列表
     private List<LocationEntity> locationEntityList;
+    // 来自于服务器端的病人的LocationEntity
+//    private List<LocationEntity> serverDataList;
 
     public GPSJudgement(DBHelper dbHelper) {
         this.dbHelper = dbHelper;
@@ -36,26 +53,8 @@ public class GPSJudgement {
             this.distance = distance;
         }
     }
-    //        int count = judge();
-    //        Log.e(TAG, String.valueOf(count));
-    //        Log.e(TAG, String.valueOf(count));
-    //        Log.e(TAG, String.valueOf(count));
-    //        Log.e(TAG, String.valueOf(count));
-    //        Log.e(TAG, String.valueOf(count));
 
-    public List<LocationEntity> getDataFromServer(String patientAddress) {
-//        String url="";//网址加mac地址
-//        HTTPUtils.getDataFromServer("", new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//
-//            }
-//        });
+    public List<LocationEntity> getMockDataFromServer(String patientAddress) {
         //请求服务器的GPS数据
         // mock data
         //        121.38803,31.764645
@@ -64,7 +63,6 @@ public class GPSJudgement {
         //        121.39276,31.754886
         //        121.3929,31.752943
         //        121.393904,31.743058
-
         // 从服务器得到一个患者的位置数据
         List<LocationEntity> list = new ArrayList<LocationEntity>();
         list.add(new LocationEntity(27.624571, 113.855194, new Date()));
@@ -83,17 +81,13 @@ public class GPSJudgement {
     public List<LocationEntity> getDataFromDatabase() {
         locationEntityList = dbHelper.getSession().getLocationEntityDao().loadAll();
         //mock data
-        //        121.390463,31.76409
-        //        121.393553,31.764473
-        //        121.396975,31.76482
-        //        121.39763,31.765103
-//        List<LocationEntity> locationList = new ArrayList<LocationEntity>();
-//        locationList.add(new LocationEntity(31.764645, 121.38803, new Date()));
-//        locationList.add(new LocationEntity(31.76409, 121.390463, new Date()));
-//        locationList.add(new LocationEntity(31.764473, 121.393553, new Date()));
-//        locationList.add(new LocationEntity(31.76482, 121.396975, new Date()));
-//        locationList.add(new LocationEntity(31.765103, 121.39763, new Date()));
-//        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+        //        List<LocationEntity> locationList = new ArrayList<LocationEntity>();
+        //        locationList.add(new LocationEntity(31.764645, 121.38803, new Date()));
+        //        locationList.add(new LocationEntity(31.76409, 121.390463, new Date()));
+        //        locationList.add(new LocationEntity(31.764473, 121.393553, new Date()));
+        //        locationList.add(new LocationEntity(31.76482, 121.396975, new Date()));
+        //        locationList.add(new LocationEntity(31.765103, 121.39763, new Date()));
+        //        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
         return locationEntityList;
     }
 
@@ -111,18 +105,13 @@ public class GPSJudgement {
         s = s * EARTH_RADIUS;
         return s;//单位米
     }
-//    需要精心设计阈值
-//    public double calDistance(LocationEntity point1, LocationEntity point2) {
-//        //不开平方距离
-//        double dis = Math.pow(point1.getLongitude() - point2.getLongitude(), 2) + Math.pow(point1.getLatitude() - point2.getLatitude(), 2);
-//        return dis;
-//    }
 
-    public List<String> dataJudge(List<PointDistance> list) {
+    //判断相同地点是否在相同时间段内发生的
+    public List<String> dateJudge(List<PointDistance> list) {
         List<String> dateList = new ArrayList<>();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         for (PointDistance pdc : list) {
-            if (DateUtils.dataDiff(pdc.entity1.getDate(), pdc.entity2.getDate()) < 10) {
+            if (DateUtils.dataDiff(pdc.entity1.getDate(), pdc.entity2.getDate()) < TIME_THRESHOLD) {
                 pdc.judgeFlag = true;
                 // 把本地的日期添加到dateList
                 dateList.add(formatter.format(pdc.entity2.getDate()));
@@ -131,12 +120,12 @@ public class GPSJudgement {
         return dateList;
     }
 
-    public int judge(String patientAddress) {
-        List<LocationEntity> serverData = getDataFromServer(patientAddress);
-        List<LocationEntity> localData = getDataFromDatabase();
+
+    //计算患者与用户之间GPS定位位置相同并且时间相同的数量（该数量与时间有关定位每10s一次，有多少次就有多少个10s的接触）
+    public Integer judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
         List<PointDistance> disList = new ArrayList<PointDistance>();
         //计算距离
-        for (LocationEntity serData : serverData) {
+        for (LocationEntity serData : serverDataList) {
             for (LocationEntity locData : localData) {
                 double distance = calDistance(serData, locData);
                 if (distance <= DIS_THRESHOLD) {
@@ -145,7 +134,39 @@ public class GPSJudgement {
             }
         }
         //判断时间段是否相同
-        List<String> dateList = dataJudge(disList);
+        List<String> dateList = dateJudge(disList);
         return dateList.size();
     }
+
+    //解析服务端发送来的数据
+    public List<LocationEntity> parseDate(Response response) {
+        List<LocationEntity> serverDataList = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+
+        try {
+            String body=response.body().string();
+            Log.e("parseDate Location",body);
+            JSONArray array = new JSONArray(body);
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jsonObject = array.getJSONObject(i);
+                Double latitude = jsonObject.getDouble("latitude");
+                Double longitude = jsonObject.getDouble("longitude");
+                String date = jsonObject.getString("date");
+                Date parsedDate = sdf.parse(date);
+                serverDataList.add(new LocationEntity(latitude, longitude, parsedDate));
+
+            }
+        } catch (JSONException | ParseException | IOException e) {
+            e.printStackTrace();
+        }
+        return serverDataList;
+    }
+
+
+    public void queryPatientLocationInfo(String patientAddress, Callback locationCallback) {
+        HTTPUtils.queryPatientLocationInfo(patientAddress, locationCallback);
+    }
+
 }
