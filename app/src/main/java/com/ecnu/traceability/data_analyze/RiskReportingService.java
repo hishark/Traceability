@@ -38,7 +38,8 @@ import okhttp3.Response;
 
 public class RiskReportingService extends Service {
 
-    int TIME_INTERVAL = 1000 * 3600 * (1/3600); // 这是12小时
+    int TIME_INTERVAL = 1000 * 3600 * 12; // 这是12小时
+//    int TIME_INTERVAL = 1000; // 这是12小时
     PendingIntent pendingIntent;
     AlarmManager alarmManager;
     // 当前设备的手机号
@@ -73,6 +74,7 @@ public class RiskReportingService extends Service {
                 //查询当前的风险等级，如果风险等级为高，主动向疫情防控服务器发送自己的手机号
                 SharedPreferences sharedPreferences = getSharedPreferences("risk_data", MODE_PRIVATE);
                 int RISK_LEVEL = sharedPreferences.getInt("RISK_LEVEL", 0);
+                Log.e("telephone", String.valueOf(RISK_LEVEL));
                 // 风险等级为3 - 高风险
                 if (RISK_LEVEL == 3) {
                     // 从SIM卡获取手机号
@@ -95,10 +97,14 @@ public class RiskReportingService extends Service {
     }
 
     private void getCurPhoneNum() {
+        Log.e("telephone test", "=======================" );
         TelephonyManager manager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         curTel = manager.getLine1Number() != null ? manager.getLine1Number() : "无法获取到手机号";
+//        curTel = manager.getLine1Number() != null ? manager.getLine1Number() : "can't get phone number";
         // 查看log是否成功取到了手机号，
-        Log.d("telephone", curTel);
+        Log.e("telephone", curTel);
+        Log.e("telephone test", "===========--==========" );
+
     }
 
     @Override

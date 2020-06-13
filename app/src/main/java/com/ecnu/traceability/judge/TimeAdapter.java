@@ -9,16 +9,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.ecnu.traceability.R;
+import com.ecnu.traceability.location.Dao.LocationEntity;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class TimeAdapter extends BaseAdapter {
 
     private Context context;
-    private List<String> meetTimeList;
+    private List<LocationEntity> meetTimeList;
     private LayoutInflater inflater;
 
-    public TimeAdapter(Context c, List<String> list) {
+    public TimeAdapter(Context c, List<LocationEntity> list) {
         this.context = c;
         this.meetTimeList = list;
         this.inflater = LayoutInflater.from(c);
@@ -55,7 +57,9 @@ public class TimeAdapter extends BaseAdapter {
         }
 
         if (meetTimeList.get(position) != null) {
-            viewHolder.tvTime.setText(meetTimeList.get(position));
+            SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String time=sdf.format(meetTimeList.get(position).getDate());
+            viewHolder.tvTime.setText(time);
         }
 
         return view;

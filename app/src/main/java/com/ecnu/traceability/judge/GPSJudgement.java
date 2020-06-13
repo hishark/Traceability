@@ -1,11 +1,13 @@
 package com.ecnu.traceability.judge;
 
+import android.os.Bundle;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.DateUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.model.LatLonPoint;
 import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
@@ -13,11 +15,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -26,7 +31,7 @@ import okhttp3.Response;
 
 public class GPSJudgement {
     public static final int DIS_THRESHOLD = 10;//距离阈值设置为10米
-    public static final int TIME_THRESHOLD=10;//时间阈值设置为10秒
+    public static final int TIME_THRESHOLD = 10;//时间阈值设置为10秒
     public static final String TAG = "ExposureJudgement";
     private DBHelper dbHelper = null;
     private static final double EARTH_RADIUS = 6378137;//赤道半径
@@ -107,22 +112,28 @@ public class GPSJudgement {
     }
 
     //判断相同地点是否在相同时间段内发生的
-    public List<String> dateJudge(List<PointDistance> list) {
-        List<String> dateList = new ArrayList<>();
+    public List<LocationEntity> dateJudge(List<PointDistance> list) {
+        List<LocationEntity> timeLocationList = new ArrayList<>();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         for (PointDistance pdc : list) {
             if (DateUtils.dataDiff(pdc.entity1.getDate(), pdc.entity2.getDate()) < TIME_THRESHOLD) {
                 pdc.judgeFlag = true;
                 // 把本地的日期添加到dateList
-                dateList.add(formatter.format(pdc.entity2.getDate()));
+                timeLocationList.add(pdc.entity2);
+                addRiskToDB(pdc.entity2);//将与病人GPS位置接触的风险信息保存到数据库持久化
             }
         }
-        return dateList;
+        return timeLocationList;
+    }
+
+    public void addRiskToDB(LocationEntity entity) {
+        dbHelper.getSession().getGPSRiskDao().insert(new GPSRisk(entity.getLatitude(), entity.getLongitude(), entity.getDate()));
+
     }
 
 
     //计算患者与用户之间GPS定位位置相同并且时间相同的数量（该数量与时间有关定位每10s一次，有多少次就有多少个10s的接触）
-    public Integer judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
+    public Bundle judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
         List<PointDistance> disList = new ArrayList<PointDistance>();
         //计算距离
         for (LocationEntity serData : serverDataList) {
@@ -134,19 +145,22 @@ public class GPSJudgement {
             }
         }
         //判断时间段是否相同
-        List<String> dateList = dateJudge(disList);
-        return dateList.size();
+        List<LocationEntity> timeLocationList = dateJudge(disList);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("gpsJudge", (Serializable) timeLocationList);
+        //return dateList.size();
+        return bundle;
     }
 
     //解析服务端发送来的数据
     public List<LocationEntity> parseDate(Response response) {
         List<LocationEntity> serverDataList = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
         try {
-            String body=response.body().string();
-            Log.e("parseDate Location",body);
+            String body = response.body().string();
+            Log.e("parseDate Location", body);
             JSONArray array = new JSONArray(body);
 
             for (int i = 0; i < array.length(); i++) {

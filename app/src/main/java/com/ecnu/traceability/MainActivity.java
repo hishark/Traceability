@@ -34,7 +34,6 @@ import com.ecnu.traceability.location.ui.MapActivity;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
 
 public class MainActivity extends BaseActivity {
     private static final String TAG = "MainActivity";
@@ -141,7 +140,7 @@ public class MainActivity extends BaseActivity {
 
         Log.e(TAG, "------------------------service start---------------------");
 
-        OneNetDeviceUtils.getDevices(getContext(),dbHelper);
+        OneNetDeviceUtils.getDevices(getApplicationContext(),dbHelper);
 
 //        oneNetDataSender = new InfoToOneNet(dbHelper);
 //        Intent intent = new Intent(this, LocationAnalysisService.class);

@@ -1,6 +1,7 @@
 package com.ecnu.traceability.judge;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
@@ -12,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,16 +31,23 @@ public class Judge {
     //所有患者的MAC地址
     private List<String> patientMacList;
     //本地数据库中的数据
-    List<LocationEntity> localLocationData;
-    List<TransportationEntity> localTransportationData;
+    private List<LocationEntity> localLocationData;
+    private List<TransportationEntity> localTransportationData;
+    //GPS位置相同的时间地点列表
+    private List<LocationEntity> timeLocationList;
+    //乘坐相同的交通工具列表
+    private List<TransportationEntity> sameTransportationList;
 
+    private int requestCount = 0;
 
     /**
      * 风险判别模块（整合了所有的风险）定时调用该方法的getRisk将会得到风险更新
+     *
      * @param context
      * @param dbHelper
      */
     public Judge(Context context, DBHelper dbHelper) {
+        requestCount = 0;
         this.risk = 0.0;
         this.context = context;
         this.dbHelper = dbHelper;
@@ -48,6 +57,7 @@ public class Judge {
         transportationJudgement = new TransportationJudge(dbHelper);
         localLocationData = gpsJudgement.getDataFromDatabase();
         localTransportationData = transportationJudgement.getDataFromDatabase();
+        //获取已经发现的病人的Mac地址列表
         HTTPUtils.getPatientMacAddress(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -56,9 +66,14 @@ public class Judge {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+
+                timeLocationList = new ArrayList<>();
+                sameTransportationList = new ArrayList<>();
+
                 patientMacList = new ArrayList<String>();
+
                 String responseBody = response.body().string();
-                Log.i("getPatientMacAddress", "============"+responseBody+"============" );
+                Log.i("getPatientMacAddress", "============" + responseBody + "============");
                 try {
                     JSONArray jsonArr = new JSONArray(responseBody);
                     Log.i("getPatientMacAddress", String.valueOf(jsonArr.length()));
@@ -76,10 +91,14 @@ public class Judge {
                     Log.i("judge ", "-----------------------------start judge-------------------------");
 
                     gpsJudgement.queryPatientLocationInfo(patientMac, locationCallback);
+                    requestCount++;
                     transportationJudgement.queryPatientTransportationinfo(patientMac, transportationCallback);
+                    requestCount++;
                     risk += macAddressJudgement.judge(macAddressJudgement.getDataFromDatabase(patientMac));
                     Log.i("mac risk", String.valueOf(risk));
                 }
+
+                judegeIsFinshed();//如果已经完成所有推送则向服务器发送已推送通知
 
 
             }
@@ -97,7 +116,12 @@ public class Judge {
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             List<LocationEntity> serverDataList = gpsJudgement.parseDate(response);
-            risk += gpsJudgement.judge(serverDataList, localLocationData);
+            Bundle bundle = gpsJudgement.judge(serverDataList, localLocationData);
+            List<LocationEntity> tempList = (List<LocationEntity>) bundle.get("gpsJudge");
+            risk += tempList.size();
+            timeLocationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
+            requestCount--;
+
             Log.i("gps risk", String.valueOf(risk));
         }
     };
@@ -111,12 +135,33 @@ public class Judge {
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             List<TransportationEntity> serverDataList = transportationJudgement.parseDateFormServer(response);
-            risk += transportationJudgement.judge(serverDataList, localTransportationData);
+//            sameTransportationList = transportationJudgement.judge(serverDataList, localTransportationData);
+            List<TransportationEntity> tempList = transportationJudgement.judge(serverDataList, localTransportationData);
+            risk += tempList.size() * 2;
+            sameTransportationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             Log.i("transportation risk", String.valueOf(risk));
-
+            requestCount--;
         }
     };
 
+    public void judegeIsFinshed() {
+        new Thread(() -> {
+            try {
+                while (true) {
+                    Thread.sleep(2000);
+                    if (requestCount == 0) {
+                        for (String mac : patientMacList) {
+                            //已经完成推送，向推送信息表添加信息
+                            HTTPUtils.addPushedInfo(mac);
+                        }
+                        break;//停止判断
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
     public List<String> getPatientMacList() {
         if (null != patientMacList) {
@@ -129,4 +174,34 @@ public class Judge {
     public double getRisk() {
         return risk;
     }
+
+    public List<TransportationEntity> getSameTransportation() {
+        if (null != sameTransportationList) {
+            return sameTransportationList;
+        } else {
+            return new ArrayList<TransportationEntity>();
+        }
+    }
+
+    public List<LocationEntity> getSameLocationList() {
+        if (null != timeLocationList) {
+            return timeLocationList;
+        } else {
+            return new ArrayList<LocationEntity>();
+        }
+    }
+
+
+    public Bundle judgeFormHistory(){
+
+        List<MacRisk> macRisks=dbHelper.getSession().getMacRiskDao().loadAll();
+        List<TransRisk> transRisks=dbHelper.getSession().getTransRiskDao().loadAll();
+        List<GPSRisk> gpsRisks=dbHelper.getSession().getGPSRiskDao().loadAll();
+        Bundle bundle=new Bundle();
+        bundle.putSerializable("macRisks", (Serializable) macRisks);
+        bundle.putSerializable("transRisks", (Serializable) transRisks);
+        bundle.putSerializable("gpsRisks", (Serializable) gpsRisks);
+        return bundle;
+    }
+
 }

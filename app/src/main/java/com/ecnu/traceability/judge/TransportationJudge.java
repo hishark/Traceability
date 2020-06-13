@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -41,26 +42,34 @@ public class TransportationJudge {
         return list;
     }
 
-    public int judge(List<TransportationEntity> patientDataList, List<TransportationEntity> locDataList) {
+    public void addRiskToDB(TransportationEntity entity) {
+        dbHelper.getSession().getTransRiskDao().insert(new TransRisk(entity.getType(), entity.getNO(), entity.getSeat(), entity.getDate()));
+    }
+
+    public List<TransportationEntity> judge(List<TransportationEntity> patientDataList, List<TransportationEntity> locDataList) {
         //        List<TransportationEntity> dataFromServer =getDataFromServer(patientMacAddress);
         //        List<TransportationEntity> locDataList = getDataFromDatabase();
-        int count = 0;
+        List<TransportationEntity> sameList = new ArrayList<>();
+        //int count = 0;
         for (TransportationEntity serData : patientDataList) {
             for (TransportationEntity locData : locDataList) {
                 if (serData.getNO().equals(locData.getNO())) {
                     if (DateUtils.dataDiff(serData.getDate(), locData.getDate()) < 200) {
-                        count++;
+                        sameList.add(serData);
+                        addRiskToDB(serData);//将风险信息保存到数据库
+                        //count++;
                     }
                 }
             }
         }
 
-        return count * 2;
+        //return count * 2;
+        return sameList;
     }
 
     public List<TransportationEntity> parseDateFormServer(Response response) {
         List<TransportationEntity> serverDataList = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
         try {

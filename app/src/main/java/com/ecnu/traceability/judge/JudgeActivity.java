@@ -56,13 +56,15 @@ public class JudgeActivity extends AppCompatActivity {
 
     // 展示数据
     private List<String> meetMacList;
+    private List<LocationEntity> meetTimeList;
     private ListView listViewCloseDevice;
-    private List<String> meetTimeList;
     private ListView listViewCloseTime;
     private TextView tvMeetCount;
 
     // 上传数据
     private ImageButton btnUploadData;
+
+    private double risk = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,19 +91,23 @@ public class JudgeActivity extends AppCompatActivity {
             bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
         }
 
+        //初始化风险项目列表
+        meetMacList = new ArrayList<>();
+        meetTimeList = new ArrayList<>();
 
         // 计算当前设备的风险等级并更新UI
         checkCurDeviceRisk(0);
         updateRiskInfo();
 
         // 测试用，点击卡片切换风险等级
-//        findViewById(R.id.cardview_risklevel).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
+        findViewById(R.id.cardview_risklevel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double historyRisk = updateRisk();
 //                RISK_LEVEL = (RISK_LEVEL + 1) % 4;
 //                updateRiskLevelLayout(RISK_LEVEL);
-//            }
-//        });
+            }
+        });
         btnUploadData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -120,11 +126,21 @@ public class JudgeActivity extends AppCompatActivity {
 
                     runOnUiThread(new Runnable() {
                         public void run() {
+                            boolean flag = false;
                             // 检查是否有变化
-                            double risk = judgeUtils.getRisk();
+                            double newRisk = judgeUtils.getRisk();
+                            if (newRisk > risk) {//选择最大的那个风险
+                                risk = newRisk;
+                            }
+                            //更新列表
+                            meetMacList = new ArrayList<>();
+                            meetTimeList = new ArrayList<>();
+                            meetMacList = judgeUtils.getPatientMacList();
+                            meetTimeList = judgeUtils.getSameLocationList();
 
-                            Log.i("judgeActivity risk", String.valueOf(risk));
+                            // 更新当前的风险等级
                             checkCurDeviceRisk(risk);
+                            Log.i("judgeActivity risk", String.valueOf(risk));
                         }
                     });
 
@@ -133,6 +149,33 @@ public class JudgeActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    /**
+     * 根据数据库中的历史数据更新risk
+     *
+     * @return
+     */
+    public double updateRisk() {
+        Bundle bundle = judgeUtils.judgeFormHistory();
+        List<MacRisk> macRisks = (List<MacRisk>) bundle.get("macRisks");
+        List<TransRisk> transRisks = (List<TransRisk>) bundle.get("transRisks");
+        List<GPSRisk> gpsRisks = (List<GPSRisk>) bundle.get("gpsRisks");
+
+        //更新列表
+        for (MacRisk mr : macRisks) {
+            meetMacList.add(mr.getMacAddress());
+        }
+        for (GPSRisk gpsRisk : gpsRisks) {
+            meetTimeList.add(new LocationEntity(gpsRisk.getLatitude(), gpsRisk.getLongitude(), gpsRisk.getDate()));
+        }
+        // for(TransRisk tr:transRisks){
+        // }
+        double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
+        if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
+            risk = tempRisk;
+        }
+        return risk;
     }
 
     //调用回调函数将信息发送至自己的服务器和OneNet服务器
@@ -161,9 +204,10 @@ public class JudgeActivity extends AppCompatActivity {
      */
     private void checkCurDeviceRisk(double risk) {
         // fake data
-        meetMacList = new ArrayList<>();
-        meetTimeList = new ArrayList<>();
-
+        // meetMacList = new ArrayList<>();
+        // meetTimeList = new ArrayList<>();
+        // meetMacList = judgeUtils.getPatientMacList();
+        // meetTimeList = judgeUtils.getSameLocationList();
         //        meetMacList = macAddressJudge.getMeetMacList();
         //        meetTimeList = gpsJudgement.judge();
 
@@ -173,6 +217,7 @@ public class JudgeActivity extends AppCompatActivity {
         // ... ...
         // 给RISK_LEVEL赋值即可更新风险等级【0:无风险 1:低风险 2:中风险 3:高风险】
 
+        //暂时先这样写，有时间尝试换成机器学习算法。
         if (risk == 0) {
             RISK_LEVEL = 0;
         } else if (risk < 2) {
@@ -181,7 +226,7 @@ public class JudgeActivity extends AppCompatActivity {
             RISK_LEVEL = 3;
         }
 
-        //        RISK_LEVEL = 3;
+        // RISK_LEVEL = 3;
 
         // 更新sharedpreference中的风险等级
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();

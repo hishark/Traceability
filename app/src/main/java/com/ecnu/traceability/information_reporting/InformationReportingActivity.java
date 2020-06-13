@@ -153,7 +153,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
         }
 
         String date=date_+" "+time_;
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date dateProcessed;
         try {
             dateProcessed=sdf.parse(date);

@@ -7,6 +7,7 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntityDao;
+import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +46,11 @@ public class MACAddressJudge {
 
     }
 
+    /**
+     * 查询数据库中病人mac地址的记录
+     * @param patientMacAddress
+     * @return
+     */
     public List<BluetoothDeviceEntity> getDataFromDatabase(String patientMacAddress) {
         //        localMacList = new ArrayList<>();
         //        String SQL_DISTINCT = "SELECT DISTINCT MAC_ADDRESS FROM "+BluetoothDeviceEntityDao.TABLENAME;
@@ -73,36 +79,26 @@ public class MACAddressJudge {
         }
     }
 
+    /**
+     * 统计接触记录中有多少条大于信号强度阈值
+     *
+     * @param localDataList 本地数据库中与病人的Mac地址接触的记录
+     * @return 满足大于阈值的记录条数
+     */
     public int judge(List<BluetoothDeviceEntity> localDataList) {
         int count = 0;
         for (BluetoothDeviceEntity entity : localDataList) {
             if (entity.getSignalStrength() > STRENGTH_THRESHOLD) {
+                addRiskToDB(entity);//将风险记录插入数据库持久化
                 count++;
             }
         }
         return count * 3;
     }
 
-    /**
-     * 得到接触过的
-     */
-    public int getMeetMacList() {
-        meetList = new ArrayList<>();
-        // 从服务器获取到患者的mac address列表 patientsMacList
-//        getMACAddressFromServer();
-        // 从本地数据库里获取到接触过的Mac Address列表
-//        getDataFromDatabase();
 
-//        Map<String,Integer> meetMap=new HashMap<String,Integer>();
-        // 获取到两个列表之后进行比对
-        // 得到接触过的Mac Address列表
-        for (String macAddress : patientsMacList) {
-            if (localMacList.contains(macAddress)) {
-//                meetList.add(macAddress);
-//                meetMap.put(macAddress,)
-            }
-        }
-
-        return meetList.size();
+    public void addRiskToDB(BluetoothDeviceEntity macAddressEntity) {
+        dbHelper.getSession().getMacRiskDao().insert(new MacRisk(macAddressEntity.getMacAddress(), macAddressEntity.getDate()));
     }
+
 }

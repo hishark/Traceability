@@ -207,7 +207,7 @@ public class InfoToOneNet {
         try {
             for (ReportInfoEntity reportFromDB : reportInfoList) {
 
-                SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Log.e(TAG, sfd.format(reportFromDB.getDate()));
                 JSONObject reportInfo = new JSONObject();
                 reportInfo.put("MacAddress", MacAddress.getBtAddressByReflection());
