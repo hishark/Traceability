@@ -12,6 +12,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -57,8 +58,10 @@ public class JudgeActivity extends AppCompatActivity {
     // 展示数据
     private List<String> meetMacList;
     private List<LocationEntity> meetTimeList;
+    private List<TransportationEntity> transList;
     private ListView listViewCloseDevice;
     private ListView listViewCloseTime;
+    private ListView listViewCloseTrans;
     private TextView tvMeetCount;
 
     // 上传数据
@@ -94,7 +97,7 @@ public class JudgeActivity extends AppCompatActivity {
         //初始化风险项目列表
         meetMacList = new ArrayList<>();
         meetTimeList = new ArrayList<>();
-
+        transList=new ArrayList<>();
         // 计算当前设备的风险等级并更新UI
         checkCurDeviceRisk(0);
         updateRiskInfo();
@@ -135,8 +138,10 @@ public class JudgeActivity extends AppCompatActivity {
                             //更新列表
                             meetMacList = new ArrayList<>();
                             meetTimeList = new ArrayList<>();
+                            transList=new ArrayList<>();
                             meetMacList = judgeUtils.getPatientMacList();
                             meetTimeList = judgeUtils.getSameLocationList();
+                            transList=judgeUtils.getSameTransportation();
 
                             // 更新当前的风险等级
                             checkCurDeviceRisk(risk);
@@ -169,8 +174,9 @@ public class JudgeActivity extends AppCompatActivity {
         for (GPSRisk gpsRisk : gpsRisks) {
             meetTimeList.add(new LocationEntity(gpsRisk.getLatitude(), gpsRisk.getLongitude(), gpsRisk.getDate()));
         }
-        // for(TransRisk tr:transRisks){
-        // }
+         for(TransRisk tr:transRisks){
+             transList.add(new TransportationEntity(tr.type,tr.NO,tr.seat,tr.date));
+         }
         double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
         if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
             risk = tempRisk;
@@ -250,6 +256,7 @@ public class JudgeActivity extends AppCompatActivity {
         TimeAdapter timeAdapter = new TimeAdapter(getApplicationContext(), meetTimeList);
         listViewCloseTime.setAdapter(timeAdapter);
 
+        TransAdapter transAdapter=new TransAdapter(getApplicationContext(),transList);
         tvMeetCount.setText(meetTimeList.size() + "");
 
     }
@@ -308,6 +315,7 @@ public class JudgeActivity extends AppCompatActivity {
         tvCurTime = findViewById(R.id.tv_risklevel_curtime);
         listViewCloseDevice = findViewById(R.id.lv_close_device);
         listViewCloseTime = findViewById(R.id.lv_close_time);
+        listViewCloseTrans = findViewById(R.id.lv_close_trans);
         tvMeetCount = findViewById(R.id.tv_meet_time_count);
         btnUploadData = findViewById(R.id.btn_upload_data);
 
@@ -346,4 +354,5 @@ public class JudgeActivity extends AppCompatActivity {
                 break;
         }
     }
+
 }
