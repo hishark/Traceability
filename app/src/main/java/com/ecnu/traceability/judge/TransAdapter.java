@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class TransAdapter extends BaseAdapter  implements View.OnClickListener {
@@ -49,7 +50,10 @@ public class TransAdapter extends BaseAdapter  implements View.OnClickListener {
             view = inflater.inflate(R.layout.trans_item, null);
             viewHolder = new TransAdapter.ViewHolder();
             viewHolder.imgDevice = view.findViewById(R.id.img_trans);
-            viewHolder.tvDevice = view.findViewById(R.id.tv_trans_info);
+            viewHolder.tvTransType = view.findViewById(R.id.tv_trans_info_type);
+            viewHolder.tvTransNo = view.findViewById(R.id.tv_trans_info_no);
+            viewHolder.tvTransSeat = view.findViewById(R.id.tv_trans_info_seat);
+            viewHolder.tvTransTime= view.findViewById(R.id.tv_trans_info_time);
             view.setTag(viewHolder);
         } else {
             view = convertView;
@@ -57,7 +61,11 @@ public class TransAdapter extends BaseAdapter  implements View.OnClickListener {
         }
 
         if (transRiskList.get(index) != null) {
-            viewHolder.tvDevice.setText(transRiskList.get(index).getType());
+            viewHolder.tvTransType.setText(transRiskList.get(index).getType());
+            viewHolder.tvTransNo.setText(transRiskList.get(index).getNO());
+            viewHolder.tvTransSeat.setText(transRiskList.get(index).getSeat().toString());
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            viewHolder.tvTransTime.setText(formatter.format(transRiskList.get(index).getDate()));
         }
 
         return view;
@@ -65,7 +73,10 @@ public class TransAdapter extends BaseAdapter  implements View.OnClickListener {
 
     class ViewHolder {
         ImageView imgDevice;
-        TextView tvDevice;
+        TextView tvTransType;
+        TextView tvTransNo;
+        TextView tvTransSeat;
+        TextView tvTransTime;
     }
 
     @Override

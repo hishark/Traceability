@@ -41,7 +41,7 @@
 
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
-            android:value="" /> <!-- OneNET api scheme -->
+            android:value="qsCeEuesQROBsUFzN4TcFaq2WzE=" /> <!-- OneNET api scheme -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.SCHEME"
             android:value="https" /> <!-- OneNET server host -->
@@ -50,7 +50,7 @@
             android:value="api.heclouds.com" />
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="" />
+            android:value="6e925f49b718ae8a541226e99c0b47ba" />
 
         <activity
             android:name=".location.ui.MapActivity"

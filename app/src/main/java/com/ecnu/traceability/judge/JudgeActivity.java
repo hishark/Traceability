@@ -11,6 +11,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
@@ -35,6 +36,8 @@ import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.transformation.TransformationChildCard;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,6 +72,12 @@ public class JudgeActivity extends AppCompatActivity {
 
     private double risk = 0.0;
 
+    // TabLayout
+    private TabLayout closeTablayout;
+    private LinearLayout layoutDevice;
+    private LinearLayout layoutTime;
+    private LinearLayout layoutTrans;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +106,29 @@ public class JudgeActivity extends AppCompatActivity {
         //初始化风险项目列表
         meetMacList = new ArrayList<>();
         meetTimeList = new ArrayList<>();
-        transList=new ArrayList<>();
+        transList = new ArrayList<>();
+
+        // 假数据 放着备用
+//        meetMacList.add("EC:51:BC:AE:15:7E");
+//        meetMacList.add("D8:CE:3A:86:DA:27");
+//        meetMacList.add("D9:CE:3A:86:DA:27");
+//        meetMacList.add("EC:51:BC:AE:15:7E");
+//        meetMacList.add("54:33:CB:8A:22:E1"); // 我滴手机
+//        meetMacList.add("B8:C9:B5:36:03:1C"); // 本地的
+//        meetMacList.add("E0:1F:88:D9:C5:9E"); // 邻居手机
+//        meetMacList.add("14:23:3B:8A:22:E2"); // 瞎编的
+//        meetMacList.add("25:13:1B:1A:12:1E"); // 瞎编的
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592208057749L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592208057729L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592051321615L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591923873393L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591838738234L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591623434324L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591598356273L)));
+//
+//        transList.add(new TransportationEntity("火车", "G123", 056, new Date()));
+//        transList.add(new TransportationEntity("火车", "G247", 12, new Date()));
+
         // 计算当前设备的风险等级并更新UI
         checkCurDeviceRisk(0);
         updateRiskInfo();
@@ -116,6 +147,42 @@ public class JudgeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
                 upload();
+            }
+        });
+
+
+        // TabLayout回调
+        closeTablayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                int position = tab.getPosition();
+                switch (position) {
+                    case 0://设备
+                        layoutDevice.setVisibility(View.VISIBLE);
+                        layoutTime.setVisibility(View.GONE);
+                        layoutTrans.setVisibility(View.GONE);
+                        break;
+                    case 1://时间
+                        layoutDevice.setVisibility(View.GONE);
+                        layoutTime.setVisibility(View.VISIBLE);
+                        layoutTrans.setVisibility(View.GONE);
+                        break;
+                    case 2://交通
+                        layoutDevice.setVisibility(View.GONE);
+                        layoutTime.setVisibility(View.GONE);
+                        layoutTrans.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
             }
         });
 
@@ -138,10 +205,10 @@ public class JudgeActivity extends AppCompatActivity {
                             //更新列表
                             meetMacList = new ArrayList<>();
                             meetTimeList = new ArrayList<>();
-                            transList=new ArrayList<>();
+                            transList = new ArrayList<>();
                             meetMacList = judgeUtils.getPatientMacList();
                             meetTimeList = judgeUtils.getSameLocationList();
-                            transList=judgeUtils.getSameTransportation();
+                            transList = judgeUtils.getSameTransportation();
 
                             // 更新当前的风险等级
                             checkCurDeviceRisk(risk);
@@ -174,9 +241,9 @@ public class JudgeActivity extends AppCompatActivity {
         for (GPSRisk gpsRisk : gpsRisks) {
             meetTimeList.add(new LocationEntity(gpsRisk.getLatitude(), gpsRisk.getLongitude(), gpsRisk.getDate()));
         }
-         for(TransRisk tr:transRisks){
-             transList.add(new TransportationEntity(tr.type,tr.NO,tr.seat,tr.date));
-         }
+        for (TransRisk tr : transRisks) {
+            transList.add(new TransportationEntity(tr.type, tr.NO, tr.seat, tr.date));
+        }
         double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
         if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
             risk = tempRisk;
@@ -256,8 +323,9 @@ public class JudgeActivity extends AppCompatActivity {
         TimeAdapter timeAdapter = new TimeAdapter(getApplicationContext(), meetTimeList);
         listViewCloseTime.setAdapter(timeAdapter);
 
-        TransAdapter transAdapter=new TransAdapter(getApplicationContext(),transList);
-        tvMeetCount.setText(meetTimeList.size() + "");
+        TransAdapter transAdapter = new TransAdapter(getApplicationContext(), transList);
+        listViewCloseTrans.setAdapter(transAdapter);
+//        tvMeetCount.setText(meetTimeList.size() + "");
 
     }
 
@@ -316,8 +384,13 @@ public class JudgeActivity extends AppCompatActivity {
         listViewCloseDevice = findViewById(R.id.lv_close_device);
         listViewCloseTime = findViewById(R.id.lv_close_time);
         listViewCloseTrans = findViewById(R.id.lv_close_trans);
-        tvMeetCount = findViewById(R.id.tv_meet_time_count);
+//        tvMeetCount = findViewById(R.id.tv_meet_time_count);
         btnUploadData = findViewById(R.id.btn_upload_data);
+        // tablayout
+        closeTablayout = findViewById(R.id.close_tablayout);
+        layoutDevice = findViewById(R.id.layout_close_device);
+        layoutTime = findViewById(R.id.layout_close_time);
+        layoutTrans = findViewById(R.id.layout_close_trans);
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");// HH:mm:ss
         //获取当前时间

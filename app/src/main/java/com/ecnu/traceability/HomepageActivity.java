@@ -1,7 +1,9 @@
 package com.ecnu.traceability;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -152,6 +154,24 @@ public class HomepageActivity extends BaseActivity {
         int id = item.getItemId();
         if (id == R.id.menu_upload) {
             startActivity(InformationReportingActivity.class);
+        } else if (id == R.id.menu_warning) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(HomepageActivity.this);
+            AlertDialog dialog = builder.setPositiveButton("是的，本人已确诊", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            })
+                    .setIcon(R.drawable.warning3)
+                    .setMessage("您已经确诊为新冠肺炎了吗？")
+                    .setTitle("紧急报告")
+                    .create();
+            dialog.show();
         }
         return super.onOptionsItemSelected(item);
     }

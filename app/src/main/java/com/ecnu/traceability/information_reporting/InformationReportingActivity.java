@@ -66,7 +66,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_information_reporting);
-        setTitle("主动上报数据");
+        setTitle("主动上报信息");
         findViewById(R.id.info_reporting_btn).setOnClickListener(this);
         dbHelper.init(this);
         oneNetDataSender = new InfoToOneNet(dbHelper);//发送到OneNet信息的工具类
@@ -107,31 +107,32 @@ public class InformationReportingActivity extends AppCompatActivity implements B
         });
 
 
-        Button testBtn = findViewById(R.id.info_reporting_to_server);
-        testBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Transportation transInfo=new Transportation(dbHelper);
-                EPayment paymentInfo=new EPayment(dbHelper);
-                transInfo.addTransportationInfo();
-                paymentInfo.addEPaymentInfo();
-
-                Message message = Message.obtain();
-                message.arg1 = MSG_ID_CLIENT;
-                Bundle bundle = new Bundle();
-                bundle.putString(MSG_CONTENT, "测试信息");
-                message.setData(bundle);
-                message.replyTo = mClientMessenger;     //指定回信人是客户端定义的
-
-                try {
-                    mServerMessenger.send(message);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-//                sendInfoToServer();
-            }
-        });
+        // 删去【提交信息到服务器】按钮，代码暂时注释以防之后需要
+//        Button testBtn = findViewById(R.id.info_reporting_to_server);
+//        testBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                Transportation transInfo=new Transportation(dbHelper);
+//                EPayment paymentInfo=new EPayment(dbHelper);
+//                transInfo.addTransportationInfo();
+//                paymentInfo.addEPaymentInfo();
+//
+//                Message message = Message.obtain();
+//                message.arg1 = MSG_ID_CLIENT;
+//                Bundle bundle = new Bundle();
+//                bundle.putString(MSG_CONTENT, "测试信息");
+//                message.setData(bundle);
+//                message.replyTo = mClientMessenger;     //指定回信人是客户端定义的
+//
+//                try {
+//                    mServerMessenger.send(message);
+//                } catch (RemoteException e) {
+//                    e.printStackTrace();
+//                }
+////                sendInfoToServer();
+//            }
+//        });
 
     }
 
