@@ -30,11 +30,15 @@ import okhttp3.Response;
 
 
 public class GPSJudgement {
-    public static final int DIS_THRESHOLD = 10;//距离阈值设置为10米
+    public static final int DIS_THRESHOLD = 50;//距离阈值设置为50米
     public static final int TIME_THRESHOLD = 10;//时间阈值设置为10秒
     public static final String TAG = "ExposureJudgement";
     private DBHelper dbHelper = null;
     private static final double EARTH_RADIUS = 6378137;//赤道半径
+
+    //联邦学习参数
+    private double avgDistance = 0.0;
+    private double gpsTime = 0.0;
 
     // 本地数据库的LocationEntity列表
     private List<LocationEntity> locationEntityList;
@@ -113,6 +117,10 @@ public class GPSJudgement {
 
     //判断相同地点是否在相同时间段内发生的
     public List<LocationEntity> dateJudge(List<PointDistance> list) {
+
+//        avgDistance = 0;
+//        gpsTime = 0;
+
         List<LocationEntity> timeLocationList = new ArrayList<>();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         for (PointDistance pdc : list) {
@@ -121,8 +129,12 @@ public class GPSJudgement {
                 // 把本地的日期添加到dateList
                 timeLocationList.add(pdc.entity2);
                 addRiskToDB(pdc.entity2);//将与病人GPS位置接触的风险信息保存到数据库持久化
+                avgDistance += pdc.distance;
             }
         }
+        avgDistance = avgDistance / (timeLocationList.size() == 0 ? 1 : timeLocationList.size()+1);
+        gpsTime = timeLocationList.size() * 10*0.0001;
+
         return timeLocationList;
     }
 
@@ -148,6 +160,8 @@ public class GPSJudgement {
         List<LocationEntity> timeLocationList = dateJudge(disList);
         Bundle bundle = new Bundle();
         bundle.putSerializable("gpsJudge", (Serializable) timeLocationList);
+        bundle.putDouble("avgDistance",avgDistance);
+        bundle.putDouble("gpsTime",gpsTime);
         //return dateList.size();
         return bundle;
     }

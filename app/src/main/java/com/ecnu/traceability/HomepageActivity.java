@@ -2,6 +2,7 @@ package com.ecnu.traceability;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -87,7 +88,10 @@ public class HomepageActivity extends BaseActivity {
                 startActivity(JudgeActivity.class);
             }
         });
-        dbHelper.init(this);
+
+        verifyStoragePermission(HomepageActivity.this);//内存读取权限检查
+
+        dbHelper.init(this);//初始化数据库连接
 
         //蓝牙服务
         Intent bluetoothIntent = new Intent(this, IBluetoothService.class);
@@ -95,12 +99,12 @@ public class HomepageActivity extends BaseActivity {
         Intent locationIntent = new Intent(this, ILocationService.class);
         startService(bluetoothIntent);
         startService(locationIntent);
-
+        //风险判断服务
         Intent riskIntent=new Intent(this, RiskReportingService.class);
         startService(riskIntent);
 
-        Log.e(TAG, "------------------------service start---------------------");
-
+        Log.i(TAG, "------------------------service start---------------------");
+        //检查设备是否注册
         OneNetDeviceUtils.getDevices(getContext(),dbHelper);
 
     }
@@ -140,6 +144,26 @@ public class HomepageActivity extends BaseActivity {
         }
     }
 
+    // read and write permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    //获取存储权限
+    public static void verifyStoragePermission(Activity activity) {
+        // Get permission status
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission we request it
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

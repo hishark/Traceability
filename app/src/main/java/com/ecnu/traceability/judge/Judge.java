@@ -7,6 +7,7 @@ import android.util.Log;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 
 import org.json.JSONArray;
@@ -40,6 +41,15 @@ public class Judge {
 
     private int requestCount = 0;
 
+    //机器学习参数相关
+    private double avgStrength = 0.0;
+    private double bluetoothTime = 0;
+    private double transCount = 0;
+    private double avgSeatDiff = 0.0;
+    private double avgDistance = 0.0;
+    private double gpsTime = 0.0;
+
+
     /**
      * 风险判别模块（整合了所有的风险）定时调用该方法的getRisk将会得到风险更新
      *
@@ -71,6 +81,7 @@ public class Judge {
                 sameTransportationList = new ArrayList<>();
 
                 patientMacList = new ArrayList<String>();
+                ArrayList<String> tempMacList=new ArrayList<String>();
 
                 String responseBody = response.body().string();
                 Log.i("getPatientMacAddress", "============" + responseBody + "============");
@@ -80,21 +91,29 @@ public class Judge {
                     for (int i = 0; i < jsonArr.length(); i++) {
                         String jsonObject = jsonArr.getString(i);
                         Log.i("patientMacList ", jsonObject);
-                        patientMacList.add(jsonObject);
+                        tempMacList.add(jsonObject);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
                 //////////////////////调用风险判别//////////////////////
-                for (String patientMac : patientMacList) {
+                for (String patientMac : tempMacList) {
                     Log.i("judge ", "-----------------------------start judge-------------------------");
 
                     gpsJudgement.queryPatientLocationInfo(patientMac, locationCallback);
                     requestCount++;
                     transportationJudgement.queryPatientTransportationinfo(patientMac, transportationCallback);
                     requestCount++;
-                    risk += macAddressJudgement.judge(macAddressJudgement.getDataFromDatabase(patientMac));
+                    Bundle bundle=macAddressJudgement.judge(macAddressJudgement.getDataFromDatabase(patientMac));
+
+                    avgStrength=bundle.getDouble("avgStrength",0);//联邦学习数据
+                    bluetoothTime+=bundle.getDouble("bluetoothTime",bluetoothTime);//联邦学习数据
+
+                    risk += bundle.getInt("count",0);
+                    if(bundle.getInt("count",0)>0){
+                        patientMacList.add(patientMac);
+                    }
                     Log.i("mac risk", String.valueOf(risk));
                 }
 
@@ -118,6 +137,10 @@ public class Judge {
             List<LocationEntity> serverDataList = gpsJudgement.parseDate(response);
             Bundle bundle = gpsJudgement.judge(serverDataList, localLocationData);
             List<LocationEntity> tempList = (List<LocationEntity>) bundle.get("gpsJudge");
+
+            avgDistance=bundle.getDouble("avgDistance",0);//联邦学习数据
+            gpsTime+=bundle.getDouble("gpsTime",0);//联邦学习数据
+
             risk += tempList.size();
             timeLocationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             requestCount--;
@@ -136,7 +159,12 @@ public class Judge {
         public void onResponse(Call call, Response response) throws IOException {
             List<TransportationEntity> serverDataList = transportationJudgement.parseDateFormServer(response);
 //            sameTransportationList = transportationJudgement.judge(serverDataList, localTransportationData);
-            List<TransportationEntity> tempList = transportationJudgement.judge(serverDataList, localTransportationData);
+            Bundle bundle= transportationJudgement.judge(serverDataList, localTransportationData);
+            List<TransportationEntity> tempList= (List<TransportationEntity>) bundle.getSerializable("sameList");
+
+            transCount+=bundle.getDouble("transCount",0);//联邦学习数据
+            avgSeatDiff=bundle.getDouble("avgSeatDiff",0);//联邦学习数据
+
             risk += tempList.size() * 2;
             sameTransportationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             Log.i("transportation risk", String.valueOf(risk));
@@ -204,4 +232,14 @@ public class Judge {
         return bundle;
     }
 
+    public Bundle getDateForFederatedLearnging(){
+        Bundle bundle=new Bundle();
+        bundle.putDouble("avgStrength",avgStrength);
+        bundle.putDouble("bluetoothTime",bluetoothTime);
+        bundle.putDouble("transCount",transCount);
+        bundle.putDouble("avgSeatDiff",avgSeatDiff);
+        bundle.putDouble("avgDistance",avgDistance);
+        bundle.putDouble("gpsTime",gpsTime);
+        return bundle;
+    }
 }

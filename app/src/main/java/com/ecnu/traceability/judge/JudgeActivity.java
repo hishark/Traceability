@@ -12,7 +12,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -32,9 +31,16 @@ import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.machine_learning.Learning;
+import com.ecnu.traceability.machine_learning.TrainModel;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
+
+import org.deeplearning4j.util.ModelSerializer;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.util.ArrayUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 
 public class JudgeActivity extends AppCompatActivity {
+    private static final int[] sampleShape = {1, 6};//数据集格式是一行三列不包括label
+
     private DBHelper dbHelper = DBHelper.getInstance();
     private GPSJudgement gpsJudgement = null;
     private MACAddressJudge macAddressJudge = null;
@@ -69,6 +77,8 @@ public class JudgeActivity extends AppCompatActivity {
 
     private double risk = 0.0;
 
+    private Learning learning;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +87,8 @@ public class JudgeActivity extends AppCompatActivity {
         dbHelper.init(this);
         gpsJudgement = new GPSJudgement(dbHelper);
         macAddressJudge = new MACAddressJudge(dbHelper);
+
+        learning=new Learning();
 
         //初始化风险判断模块快
         judgeUtils = new Judge(getApplicationContext(), dbHelper);
@@ -97,7 +109,7 @@ public class JudgeActivity extends AppCompatActivity {
         //初始化风险项目列表
         meetMacList = new ArrayList<>();
         meetTimeList = new ArrayList<>();
-        transList=new ArrayList<>();
+        transList = new ArrayList<>();
         // 计算当前设备的风险等级并更新UI
         checkCurDeviceRisk(0);
         updateRiskInfo();
@@ -129,19 +141,34 @@ public class JudgeActivity extends AppCompatActivity {
 
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            boolean flag = false;
+                            //boolean flag = false;
                             // 检查是否有变化
                             double newRisk = judgeUtils.getRisk();
                             if (newRisk > risk) {//选择最大的那个风险
                                 risk = newRisk;
+
+                                if (risk == 0) {
+                                    RISK_LEVEL = 0;
+                                } else if (risk < 2) {
+                                    RISK_LEVEL = 1;
+                                } else if (risk >= 3) {
+                                    RISK_LEVEL = 3;
+                                }
+                                Bundle bundle=judgeUtils.getDateForFederatedLearnging();
+                                infer(bundle);
+                                learning.setRawDataLabel(new int[]{RISK_LEVEL});
+                                learning.propocessData(bundle);
+                                learning.startLearning();
+
+                                //learning.setRawData();
                             }
                             //更新列表
                             meetMacList = new ArrayList<>();
                             meetTimeList = new ArrayList<>();
-                            transList=new ArrayList<>();
+                            transList = new ArrayList<>();
                             meetMacList = judgeUtils.getPatientMacList();
                             meetTimeList = judgeUtils.getSameLocationList();
-                            transList=judgeUtils.getSameTransportation();
+                            transList = judgeUtils.getSameTransportation();
 
                             // 更新当前的风险等级
                             checkCurDeviceRisk(risk);
@@ -166,7 +193,6 @@ public class JudgeActivity extends AppCompatActivity {
         List<MacRisk> macRisks = (List<MacRisk>) bundle.get("macRisks");
         List<TransRisk> transRisks = (List<TransRisk>) bundle.get("transRisks");
         List<GPSRisk> gpsRisks = (List<GPSRisk>) bundle.get("gpsRisks");
-
         //更新列表
         for (MacRisk mr : macRisks) {
             meetMacList.add(mr.getMacAddress());
@@ -174,9 +200,9 @@ public class JudgeActivity extends AppCompatActivity {
         for (GPSRisk gpsRisk : gpsRisks) {
             meetTimeList.add(new LocationEntity(gpsRisk.getLatitude(), gpsRisk.getLongitude(), gpsRisk.getDate()));
         }
-         for(TransRisk tr:transRisks){
-             transList.add(new TransportationEntity(tr.type,tr.NO,tr.seat,tr.date));
-         }
+        for (TransRisk tr : transRisks) {
+            transList.add(new TransportationEntity(tr.type, tr.NO, tr.seat, tr.date));
+        }
         double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
         if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
             risk = tempRisk;
@@ -204,7 +230,43 @@ public class JudgeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+    public void infer(Bundle bundle) {
 
+        double avgStrength = bundle.getDouble("avgStrength", 0);
+        double bluetoothTime = bundle.getDouble("bluetoothTime", 0);
+        double transCount = bundle.getDouble("transCount", 0);
+        double avgSeatDiff = bundle.getDouble("avgSeatDiff", 0);
+        double avgDistance = bundle.getDouble("avgDistance", 0);
+        double gpsTime = bundle.getDouble("gpsTime", 0);
+
+        double[] dataArray = {avgStrength, bluetoothTime, transCount, transCount == 0 ? 10 : (avgSeatDiff * 0.01), avgDistance, gpsTime};
+
+        //等待生成数据和加载模型
+        new Thread(() -> {
+            try {
+                if (TrainModel.model == null) {
+                    Log.i("Learning", "model is not loaded yet");
+                    Log.e("loading model", "正在尝试加载模型" );
+                    TrainModel.model = ModelSerializer.restoreMultiLayerNetwork(
+                            TrainModel.locateToLoadModel, false);
+                    Log.e("loading model", "已经尝试加载模型" );
+                }
+
+                INDArray sample_to_infer = Nd4j.create(ArrayUtil.flattenDoubleArray(dataArray), sampleShape);
+                INDArray predicted = TrainModel.model.output(sample_to_infer, false);
+                INDArray index = predicted.argMax();
+                int[] pl = index.toIntVector();
+                int result = pl[0];
+                Log.e("federated learning", "推断结果是" + result);
+                Log.i("federated learning", "推断结果是" + result);
+                Log.i("federated learning", "推断结果是" + result);
+                Log.i("federated learning", "推断结果是" + result);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
     /**
      * 判断当前设备的风险等级并更新UI
      */
@@ -224,14 +286,15 @@ public class JudgeActivity extends AppCompatActivity {
         // 给RISK_LEVEL赋值即可更新风险等级【0:无风险 1:低风险 2:中风险 3:高风险】
 
         //暂时先这样写，有时间尝试换成机器学习算法。
-        if (risk == 0) {
+        if (risk <= 0) {
             RISK_LEVEL = 0;
         } else if (risk < 2) {
             RISK_LEVEL = 1;
-        } else if (risk >= 3) {
-            RISK_LEVEL = 3;
+        } else if (risk >= 3 &&risk<10) {
+            RISK_LEVEL = 2;
+        }else{
+            RISK_LEVEL=3;
         }
-
         // RISK_LEVEL = 3;
 
         // 更新sharedpreference中的风险等级
@@ -256,7 +319,7 @@ public class JudgeActivity extends AppCompatActivity {
         TimeAdapter timeAdapter = new TimeAdapter(getApplicationContext(), meetTimeList);
         listViewCloseTime.setAdapter(timeAdapter);
 
-        TransAdapter transAdapter=new TransAdapter(getApplicationContext(),transList);
+        TransAdapter transAdapter = new TransAdapter(getApplicationContext(), transList);
         tvMeetCount.setText(meetTimeList.size() + "");
 
     }

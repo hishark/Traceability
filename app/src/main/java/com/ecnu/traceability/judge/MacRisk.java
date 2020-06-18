@@ -4,11 +4,12 @@ import org.greenrobot.greendao.annotation.Entity;
 
 import java.util.Date;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Transient;
+
 @Entity
 public class MacRisk {
     public String macAddress;
     public Date date;
-
 
     @Generated(hash = 1496003659)
     public MacRisk(String macAddress, Date date) {

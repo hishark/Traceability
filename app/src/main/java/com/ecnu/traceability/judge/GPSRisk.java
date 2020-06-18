@@ -4,6 +4,7 @@ import org.greenrobot.greendao.annotation.Entity;
 
 import java.util.Date;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Transient;
 
 @Entity
 public class GPSRisk {

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ecnu.traceability">
 
-<!--    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />-->
+    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -19,6 +19,8 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 用于申请调用A-GPS模块 -->
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /><!-- 内存读写权限-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <application
         android:name=".SampleApplication"
         android:allowBackup="true"
@@ -27,6 +29,7 @@
         android:roundIcon="@drawable/trace"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".HomepageActivity">
             <intent-filter>
@@ -41,7 +44,7 @@
 
         <meta-data
             android:name="com.chinamobile.iot.onenet.APP-KEY"
-            android:value="" /> <!-- OneNET api scheme -->
+            android:value="qsCeEuesQROBsUFzN4TcFaq2WzE=" /> <!-- OneNET api scheme -->
         <meta-data
             android:name="com.chinamobile.iot.onenet.SCHEME"
             android:value="https" /> <!-- OneNET server host -->
@@ -50,7 +53,7 @@
             android:value="api.heclouds.com" />
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="" />
+            android:value="7841366f94278842f6cbad268b492960" />
 
         <activity
             android:name=".location.ui.MapActivity"

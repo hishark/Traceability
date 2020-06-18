@@ -1,6 +1,7 @@
 package com.ecnu.traceability.judge;
 
 import android.database.Cursor;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
@@ -29,6 +30,10 @@ public class MACAddressJudge {
         this.dbHelper = dbHelper;
     }
 
+    //联邦学习数据
+    private double avgStrength = 0.0;
+    private double bluetoothTime = 0;
+
     /**
      * 从服务器拿到患者的MAC ADDRESS - List
      */
@@ -48,6 +53,7 @@ public class MACAddressJudge {
 
     /**
      * 查询数据库中病人mac地址的记录
+     *
      * @param patientMacAddress
      * @return
      */
@@ -85,15 +91,27 @@ public class MACAddressJudge {
      * @param localDataList 本地数据库中与病人的Mac地址接触的记录
      * @return 满足大于阈值的记录条数
      */
-    public int judge(List<BluetoothDeviceEntity> localDataList) {
-        int count = 0;
+    public Bundle judge(List<BluetoothDeviceEntity> localDataList) {
+//        avgStrength = 0;
+//        bluetoothTime = 0;
+
+        int count = 1;
         for (BluetoothDeviceEntity entity : localDataList) {
             if (entity.getSignalStrength() > STRENGTH_THRESHOLD) {
                 addRiskToDB(entity);//将风险记录插入数据库持久化
+                avgStrength+=entity.getSignalStrength();
                 count++;
             }
         }
-        return count * 3;
+        Log.e("---getSignalStrength---", String.valueOf(avgStrength));
+        avgStrength=avgStrength*1.0/(count==0?1:count);
+        bluetoothTime=count*5*0.0001;
+
+        Bundle bundle=new Bundle();
+        bundle.putInt("count",count*3);
+        bundle.putDouble("avgStrength",avgStrength);
+        bundle.putDouble("bluetoothTime",bluetoothTime);
+        return bundle;
     }
 
 

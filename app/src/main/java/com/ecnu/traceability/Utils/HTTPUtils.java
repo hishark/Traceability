@@ -5,6 +5,7 @@ import android.util.Log;
 import com.chinamobile.iot.onenet.http.HttpExecutor;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.machine_learning.TrainModel;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 
@@ -12,22 +13,28 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class HTTPUtils {
-    private static final String IP = "132.232.144.76";
+    //    private static final String IP = "132.232.144.76";
+    private static final String IP = "192.168.1.6";
     public static final String TAG = "HTTPUtils";
     private static HttpExecutor httpExecutor = new HttpExecutor(new OkHttpClient());
 
@@ -293,4 +300,50 @@ public class HTTPUtils {
         addReportInfoList(reportInfoEntityList);
         addTransportationinfo(transportationEntityList);
     }
+
+
+    public static ResponseBody upload(File file) throws Exception {
+        String macAddress = OneNetDeviceUtils.macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/upload/model/" + macAddress;
+        OkHttpClient client = new OkHttpClient();
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(),
+                        RequestBody.create(MediaType.parse("multipart/form-data"), file))
+                .build();
+
+
+        Request request = new Request.Builder()
+//                .header("Authorization", "Client-ID " + UUID.randomUUID())
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        Response response = client.newCall(request).execute();
+        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+        return response.body();
+    }
+
+    public static void download() {
+
+        String url = "http://" + IP + ":8080/TraceabilityServer/download/model";
+        DownloadUtil.get().download(url,  new DownloadUtil.OnDownloadListener() {
+            @Override
+            public void onDownloadSuccess() {
+                Log.i(TAG, "模型下载成功");
+            }
+
+            @Override
+            public void onDownloading(int progress) {
+//                Log.i(TAG, String.valueOf(progress));
+            }
+
+            @Override
+            public void onDownloadFailed() {
+                Log.i(TAG, "模型下载失败");
+            }
+        });
+    }
+
 }
