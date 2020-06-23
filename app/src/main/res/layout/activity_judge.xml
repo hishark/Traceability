@@ -188,111 +188,197 @@
     <!--显示与哪个mac地址接触和接触的时间段数量就可以-->
     <!--也就是与xxx接触过，接触了几次。大概这个意思-->
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    <!--    <LinearLayout-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:orientation="vertical">-->
 
-        <TextView
+    <!--        <TextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_marginLeft="15dp"-->
+    <!--            android:text="接触设备"-->
+    <!--            android:textSize="18dp" />-->
+
+    <!--        <androidx.cardview.widget.CardView-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="0dp"-->
+    <!--            android:layout_marginHorizontal="15dp"-->
+    <!--            android:layout_marginVertical="4dp"-->
+    <!--            android:layout_weight="1"-->
+    <!--            app:cardCornerRadius="10dp">-->
+
+    <!--            <ListView-->
+    <!--                android:id="@+id/lv_close_device"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="match_parent"-->
+    <!--                android:layout_margin="5dp"-->
+    <!--                android:layout_weight="1"-->
+    <!--                android:scrollbars="none" />-->
+
+    <!--        </androidx.cardview.widget.CardView>-->
+
+
+    <!--        <TextView-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_marginLeft="15dp"-->
+    <!--            android:text="接触时间"-->
+    <!--            android:textSize="18dp" />-->
+
+    <!--        <androidx.cardview.widget.CardView-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="0dp"-->
+    <!--            android:layout_marginHorizontal="15dp"-->
+    <!--            android:layout_marginVertical="4dp"-->
+    <!--            android:layout_weight="1"-->
+    <!--            app:cardCornerRadius="10dp">-->
+
+    <!--            <ListView-->
+    <!--                android:id="@+id/lv_close_time"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="match_parent"-->
+    <!--                android:layout_margin="5dp"-->
+    <!--                android:layout_weight="1"-->
+    <!--                android:scrollbars="none" />-->
+
+    <!--        </androidx.cardview.widget.CardView>-->
+
+    <!--        <androidx.cardview.widget.CardView-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="0dp"-->
+    <!--            android:layout_marginHorizontal="15dp"-->
+    <!--            android:layout_marginVertical="4dp"-->
+    <!--            android:layout_weight="1"-->
+    <!--            app:cardCornerRadius="10dp">-->
+
+    <!--            <ListView-->
+    <!--                android:id="@+id/lv_close_trans"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="match_parent"-->
+    <!--                android:layout_margin="5dp"-->
+    <!--                android:layout_weight="1"-->
+    <!--                android:scrollbars="none" />-->
+
+    <!--        </androidx.cardview.widget.CardView>-->
+
+    <!--        <LinearLayout-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_gravity="center"-->
+    <!--            android:orientation="horizontal">-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:text="您和患者共密切接触"-->
+    <!--                android:textSize="18dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:id="@+id/tv_meet_time_count"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:gravity="center"-->
+    <!--                android:text="3"-->
+    <!--                android:textColor="#C25F57"-->
+    <!--                android:textSize="18dp" />-->
+
+    <!--            <TextView-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:gravity="center"-->
+    <!--                android:text="次"-->
+    <!--                android:textSize="18dp" />-->
+
+    <!--        </LinearLayout>-->
+
+    <!--    </LinearLayout>-->
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/close_tablayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:background="@color/mdtp_white">
+
+        <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
-            android:text="接触设备"
-            android:textSize="18dp" />
+            android:icon="@drawable/bluetooth2"
+            android:text="接触设备" />
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/time"
+            android:text="接触时间" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:icon="@drawable/trans"
+            android:text="出行记录" />
+
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="15dp"
+        android:background="@color/mdtp_white">
+
+        <LinearLayout
+            android:id="@+id/layout_close_device"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="15dp"
-            android:layout_marginVertical="4dp"
-            android:layout_weight="1"
-            app:cardCornerRadius="10dp">
+            android:layout_height="match_parent"
+            android:visibility="visible">
+
 
             <ListView
                 android:id="@+id/lv_close_device"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:scrollbars="none" />
 
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="15dp"
-            android:text="接触时间"
-            android:textSize="18dp" />
-
-        <androidx.cardview.widget.CardView
+        <LinearLayout
+            android:id="@+id/layout_close_time"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="15dp"
-            android:layout_marginVertical="4dp"
-            android:layout_weight="1"
-            app:cardCornerRadius="10dp">
+            android:layout_height="match_parent"
+            android:visibility="invisible">
+
 
             <ListView
                 android:id="@+id/lv_close_time"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:scrollbars="none" />
 
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
-        <androidx.cardview.widget.CardView
+        <LinearLayout
+            android:id="@+id/layout_close_trans"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginHorizontal="15dp"
-            android:layout_marginVertical="4dp"
-            android:layout_weight="1"
-            app:cardCornerRadius="10dp">
+            android:layout_height="match_parent"
+            android:visibility="invisible">
 
             <ListView
                 android:id="@+id/lv_close_trans"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:scrollbars="none" />
 
-        </androidx.cardview.widget.CardView>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="您和患者共密切接触"
-                android:textSize="18dp" />
-
-            <TextView
-                android:id="@+id/tv_meet_time_count"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="3"
-                android:textColor="#C25F57"
-                android:textSize="18dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="次"
-                android:textSize="18dp" />
-
         </LinearLayout>
 
-    </LinearLayout>
 
+    </FrameLayout>
 
 </LinearLayout>

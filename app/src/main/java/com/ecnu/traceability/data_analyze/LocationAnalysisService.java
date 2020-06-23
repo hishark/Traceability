@@ -98,11 +98,16 @@ public class LocationAnalysisService extends Service implements GeocodeSearch.On
             List<LocationEntity> locList = getDataFromDatabase(i);
             double lat = 0;
             double lon = 0;
+            int count_num=0;
             for (LocationEntity locData : locList) {
-                lat += locData.getLatitude();
-                lon += locData.getLongitude();
+                if(locData.getLongitude()!=0&&locData.getLatitude()!=0){
+                    count_num++;
+                    lat += locData.getLatitude();
+                    lon += locData.getLongitude();
+                }
+
             }
-            LatLonPoint point = new LatLonPoint(lat / locList.size(), lon / locList.size());
+            LatLonPoint point = new LatLonPoint(lat /(count_num==0?1:count_num), lon / (count_num==0?1:count_num));
             latlonToLocation(point);//逆地理编码
         }
         this.count = times;

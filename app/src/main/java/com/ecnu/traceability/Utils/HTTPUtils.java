@@ -34,7 +34,7 @@ import okhttp3.ResponseBody;
 
 public class HTTPUtils {
     //    private static final String IP = "132.232.144.76";
-    private static final String IP = "192.168.1.6";
+    private static final String IP = "192.168.1.8";
     public static final String TAG = "HTTPUtils";
     private static HttpExecutor httpExecutor = new HttpExecutor(new OkHttpClient());
 
@@ -85,6 +85,7 @@ public class HTTPUtils {
         try {
             requestContent.put("macAddress", device.getMac());
             requestContent.put("deviceId", device.getDeviceId());
+            requestContent.put("tel", "19121677361");
             requestContent.put("flag", "true");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -265,7 +266,8 @@ public class HTTPUtils {
     }
 
     public static void getPatientMacAddress(Callback callback) {
-        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData";
+        String macAddress = OneNetDeviceUtils.macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData/"+macAddress;
         getDataFromServer(url, callback);
     }
 

@@ -62,13 +62,13 @@ public class OneNetDeviceUtils {
 
                             if (0 == errno) {
                                 JsonObject jsobj = (JsonObject) resp.get("data");
-                                String deviceId = String.valueOf(jsobj.get("device_id"));
+                                String deviceId = jsobj.get("device_id").toString().replaceAll("\"","");
                                 LocalDevice device = new LocalDevice(mac, deviceId);
                                 dbHelper.getSession().getLocalDeviceDao().insert(device);
                                 //成功
                                 HTTPUtils.addUser(device);
 
-                                Log.e("OneNetDeviceUtils", String.valueOf(resp.get("data.device_id")));
+                                Log.e("OneNetDeviceUtils", deviceId);
                                 //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
                                 Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
                             } else {

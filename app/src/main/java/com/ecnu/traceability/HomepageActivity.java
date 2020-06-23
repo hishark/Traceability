@@ -1,17 +1,27 @@
 package com.ecnu.traceability;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.BaseAdapter;
 
+import com.ecnu.traceability.Utils.GeneralUtils;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
+import com.ecnu.traceability.ePayment.EPayment;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.judge.JudgeActivity;
+import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.location.service.FencesService;
 import com.ecnu.traceability.location.ui.MapActivity;
 
 import android.Manifest;
@@ -45,14 +55,20 @@ import com.ecnu.traceability.information_reporting.InformationReportingActivity;
 import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
+import com.ecnu.traceability.transportation.Dao.TransportationEntity;
+import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
+import com.ecnu.traceability.transportation.Transportation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
 public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
     private static final int REQUEST_PERMISSION = 10;
+    private InfoToOneNet oneNetDataSender = null;
+
     private DBHelper dbHelper = DBHelper.getInstance();
 
     @Override
@@ -89,9 +105,11 @@ public class HomepageActivity extends BaseActivity {
             }
         });
 
+
         verifyStoragePermission(HomepageActivity.this);//内存读取权限检查
 
-        dbHelper.init(this);//初始化数据库连接
+
+        dbHelper.init(this);
 
         //蓝牙服务
         Intent bluetoothIntent = new Intent(this, IBluetoothService.class);
@@ -99,14 +117,32 @@ public class HomepageActivity extends BaseActivity {
         Intent locationIntent = new Intent(this, ILocationService.class);
         startService(bluetoothIntent);
         startService(locationIntent);
-        //风险判断服务
+
         Intent riskIntent=new Intent(this, RiskReportingService.class);
         startService(riskIntent);
 
-        Log.i(TAG, "------------------------service start---------------------");
-        //检查设备是否注册
+        Log.e(TAG, "------------------------service start---------------------");
+
         OneNetDeviceUtils.getDevices(getContext(),dbHelper);
 
+
+        Transportation transportation=new Transportation(dbHelper);
+        transportation.addTransportationInfo();
+        EPayment payment=new EPayment(dbHelper);
+        payment.addEPaymentInfo();
+
+        //围栏服务
+        Intent fencesIntent=new Intent(this,FencesService.class);
+        startService(fencesIntent);
+
+        // 上传数据相关
+        oneNetDataSender = new InfoToOneNet(dbHelper);
+        //判断服务是否运行
+        boolean serviceFlag = GeneralUtils.isServiceRunning(getApplicationContext(), "com.ecnu.traceability.data_analyze.LocationAnalysisService");
+        if (!serviceFlag) {
+            Intent intent = new Intent(this, LocationAnalysisService.class);
+            bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+        }
     }
 
     @Override
@@ -144,6 +180,40 @@ public class HomepageActivity extends BaseActivity {
         }
     }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.homepage_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.menu_upload) {
+            startActivity(InformationReportingActivity.class);
+        } else if (id == R.id.menu_warning) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(HomepageActivity.this);
+            AlertDialog dialog = builder.setPositiveButton("是的，本人已确诊", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
+                    upload();
+                }
+            }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            })
+                    .setIcon(R.drawable.warning3)
+                    .setMessage("您已经确诊为新冠肺炎了吗？")
+                    .setTitle("紧急报告")
+                    .create();
+            dialog.show();
+        }
+        return super.onOptionsItemSelected(item);
+    }
     // read and write permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -165,18 +235,70 @@ public class HomepageActivity extends BaseActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.homepage_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
+    //调用回调函数将信息发送至自己的服务器和OneNet服务器
+    public void upload() {
+        Transportation transInfo = new Transportation(dbHelper);
+        EPayment paymentInfo = new EPayment(dbHelper);
+        transInfo.addTransportationInfo();
+        paymentInfo.addEPaymentInfo();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.menu_upload) {
-            startActivity(InformationReportingActivity.class);
+        Message message = Message.obtain();
+        message.arg1 = MSG_ID_CLIENT;
+        Bundle bundle = new Bundle();
+        bundle.putString(MSG_CONTENT, "准备发送信息到OneNet和自己的服务器");
+        message.setData(bundle);
+        message.replyTo = mClientMessenger;
+
+        try {
+            mServerMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
-        return super.onOptionsItemSelected(item);
     }
+    //    ---------------------------------------------Messager回调函数开始-------------------------------------------------
+    private static final int MSG_ID_CLIENT = 1;
+    private static final int MSG_ID_SERVER = 2;
+    private static final String MSG_CONTENT = "getAddress";
+    /**
+     * 客户端的 Messenger
+     */
+    Messenger mClientMessenger = new Messenger(new Handler() {
+        @Override
+        public void handleMessage(final Message msg) {
+            if (msg != null && msg.arg1 == MSG_ID_SERVER) {
+                if (msg.getData() == null) {
+                    return;
+                }
+
+                //信息发送部分
+                ////////////////////////////////////////////////////////向OneNet发送
+                Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
+                oneNetDataSender.pushLocationMapData(locationMap);//向OneNet发送地点（地图）统计信息
+                List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet地点统计（饼图）发送信息
+                List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
+                        .orderAsc(ReportInfoEntityDao.Properties.Date).list();
+                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
+                ////////////////////////////////////////////////////////向服务器发送
+                List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
+                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
+            }
+        }
+    });
+
+    //服务端的 Messenger
+    private Messenger mServerMessenger;
+
+    private ServiceConnection mMessengerConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(final ComponentName name, final IBinder service) {
+            mServerMessenger = new Messenger(service);
+        }
+
+        @Override
+        public void onServiceDisconnected(final ComponentName name) {
+            mServerMessenger = null;
+        }
+    };
+//    ---------------------------------------------Messager回调函数结束-------------------------------------------------
 }

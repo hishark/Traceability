@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ecnu.traceability">
-
+    <uses-permission-sdk-23 android:name="android.permission.LOCAL_MAC_ADDRESS" />
     <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -81,7 +81,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
+
         <service android:name=".data_analyze.RiskReportingService" />
+        <service android:name=".location.service.FencesService" android:exported="true"/>
+
     </application>
 
 </manifest>

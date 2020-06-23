@@ -96,13 +96,16 @@ public class LocationAnalysisActivity extends AppCompatActivity {
                 .backgroundColor("#ffffff")
                 .title("14天内到访地点")
                 .subtitle("")
+                .dataLabelsFontSize(15f)
+                .titleFontSize(20f)
+                .dataLabelsFontSize(15f)
                 .dataLabelsEnabled(true)//是否直接显示扇形图数据
                 .yAxisTitle("℃")
                 .series(new AAPie[]{
                         new AAPie()
-                                .name("到访地点")
+                                .name("停留时间（小时）")
                                 .innerSize("20%")
-                                .size(150f)
+                                .size(300f)
                                 .dataLabels(new AADataLabels()
                                         .enabled(true)
                                         .useHTML(true)

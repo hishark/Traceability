@@ -65,16 +65,18 @@ public class MapActivity extends AppCompatActivity {
         double y = 0;
         int k = 5;
         for (LocationEntity latlon : locationList) {
-            count++;
-            x += latlon.getLatitude();
-            y += latlon.getLongitude();
-            if (count % k == 0) {
-                mOriginList.add(new LatLng(x / k, y / k));
-                //                Log.e("计算结果",x / k+"  "+y/k);
-                x = 0;
-                y = 0;
-            }
-        //            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
+//            if (latlon.getLatitude() != 0 && latlon.getLongitude() != 0) {
+//                count++;
+//                x += latlon.getLatitude();
+//                y += latlon.getLongitude();
+//                if (count % k == 0) {
+//                    mOriginList.add(new LatLng(x / k, y / k));
+//                    x = 0;
+//                    y = 0;
+//                }
+//            }
+            mOriginList.add(new LatLng(latlon.getLatitude(),latlon.getLongitude()));
+            //            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
         }
         //        for (LatLng lo:mOriginList){
         //            Log.e("data",lo.latitude+" "+lo.longitude);

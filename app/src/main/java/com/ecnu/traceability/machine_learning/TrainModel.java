@@ -55,9 +55,9 @@ public class TrainModel {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr, 4, 0, 4);
+        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr, 4, 0, 3);
         transferred_model.fit(trainIter, nEpochs);
-        transferred_model.addListeners(new ScoreIterationListener(1));
+//        transferred_model.addListeners(new ScoreIterationListener(1));
         return transferred_model;
     }
 

@@ -11,7 +11,9 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -32,10 +34,14 @@ import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.machine_learning.Learning;
+import com.ecnu.traceability.machine_learning.LearningData;
+import com.ecnu.traceability.machine_learning.LearningDataDao;
 import com.ecnu.traceability.machine_learning.TrainModel;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.transformation.TransformationChildCard;
 
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -49,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 
 public class JudgeActivity extends AppCompatActivity {
+
+    public static final int MAX_RISK_LEVEL = 2;
     private static final int[] sampleShape = {1, 6};//数据集格式是一行三列不包括label
 
     private DBHelper dbHelper = DBHelper.getInstance();
@@ -59,6 +67,9 @@ public class JudgeActivity extends AppCompatActivity {
 
     // 风险等级
     private int RISK_LEVEL = 0; //0:无风险 1:低风险 2:中风险 3:高风险
+    private Learning learning;
+
+
     private LinearLayout layout_high, layout_mid, layout_low, layout_zero;
     private TextView tvCurTime;
     private TextView tvBoard;
@@ -77,7 +88,17 @@ public class JudgeActivity extends AppCompatActivity {
 
     private double risk = 0.0;
 
-    private Learning learning;
+    // TabLayout
+    private TabLayout closeTablayout;
+    private LinearLayout layoutDevice;
+    private LinearLayout layoutTime;
+    private LinearLayout layoutTrans;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("judgeActivity", "============================");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +109,7 @@ public class JudgeActivity extends AppCompatActivity {
         gpsJudgement = new GPSJudgement(dbHelper);
         macAddressJudge = new MACAddressJudge(dbHelper);
 
-        learning=new Learning();
+        learning = new Learning();
 
         //初始化风险判断模块快
         judgeUtils = new Judge(getApplicationContext(), dbHelper);
@@ -110,6 +131,28 @@ public class JudgeActivity extends AppCompatActivity {
         meetMacList = new ArrayList<>();
         meetTimeList = new ArrayList<>();
         transList = new ArrayList<>();
+
+        // 假数据 放着备用
+//        meetMacList.add("EC:51:BC:AE:15:7E");
+//        meetMacList.add("D8:CE:3A:86:DA:27");
+//        meetMacList.add("D9:CE:3A:86:DA:27");
+//        meetMacList.add("EC:51:BC:AE:15:7E");
+//        meetMacList.add("54:33:CB:8A:22:E1"); // 我滴手机
+//        meetMacList.add("B8:C9:B5:36:03:1C"); // 本地的
+//        meetMacList.add("E0:1F:88:D9:C5:9E"); // 邻居手机
+//        meetMacList.add("14:23:3B:8A:22:E2"); // 瞎编的
+//        meetMacList.add("25:13:1B:1A:12:1E"); // 瞎编的
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592208057749L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592208057729L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1592051321615L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591923873393L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591838738234L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591623434324L)));
+//        meetTimeList.add(new LocationEntity(29.11, 115.22, new Date(1591598356273L)));
+//
+//        transList.add(new TransportationEntity("火车", "G123", 056, new Date()));
+//        transList.add(new TransportationEntity("火车", "G247", 12, new Date()));
+
         // 计算当前设备的风险等级并更新UI
         checkCurDeviceRisk(0);
         updateRiskInfo();
@@ -118,7 +161,7 @@ public class JudgeActivity extends AppCompatActivity {
         findViewById(R.id.cardview_risklevel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                double historyRisk = updateRisk();
+                updateRisk();
 //                RISK_LEVEL = (RISK_LEVEL + 1) % 4;
 //                updateRiskLevelLayout(RISK_LEVEL);
             }
@@ -128,6 +171,42 @@ public class JudgeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
                 upload();
+            }
+        });
+
+
+        // TabLayout回调
+        closeTablayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                int position = tab.getPosition();
+                switch (position) {
+                    case 0://设备
+                        layoutDevice.setVisibility(View.VISIBLE);
+                        layoutTime.setVisibility(View.GONE);
+                        layoutTrans.setVisibility(View.GONE);
+                        break;
+                    case 1://时间
+                        layoutDevice.setVisibility(View.GONE);
+                        layoutTime.setVisibility(View.VISIBLE);
+                        layoutTrans.setVisibility(View.GONE);
+                        break;
+                    case 2://交通
+                        layoutDevice.setVisibility(View.GONE);
+                        layoutTime.setVisibility(View.GONE);
+                        layoutTrans.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
             }
         });
 
@@ -141,26 +220,12 @@ public class JudgeActivity extends AppCompatActivity {
 
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            //boolean flag = false;
                             // 检查是否有变化
                             double newRisk = judgeUtils.getRisk();
                             if (newRisk > risk) {//选择最大的那个风险
                                 risk = newRisk;
-
-                                if (risk == 0) {
-                                    RISK_LEVEL = 0;
-                                } else if (risk < 2) {
-                                    RISK_LEVEL = 1;
-                                } else if (risk >= 3) {
-                                    RISK_LEVEL = 3;
-                                }
-                                Bundle bundle=judgeUtils.getDateForFederatedLearnging();
+                                Bundle bundle = judgeUtils.getDateForFederatedLearnging();
                                 infer(bundle);
-                                learning.setRawDataLabel(new int[]{RISK_LEVEL});
-                                learning.propocessData(bundle);
-                                learning.startLearning();
-
-                                //learning.setRawData();
                             }
                             //更新列表
                             meetMacList = new ArrayList<>();
@@ -169,12 +234,24 @@ public class JudgeActivity extends AppCompatActivity {
                             meetMacList = judgeUtils.getPatientMacList();
                             meetTimeList = judgeUtils.getSameLocationList();
                             transList = judgeUtils.getSameTransportation();
-
                             // 更新当前的风险等级
                             checkCurDeviceRisk(risk);
                             Log.i("judgeActivity risk", String.valueOf(risk));
                         }
                     });
+
+                    if (risk == 0) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateRisk();
+                                checkCurDeviceRisk(risk);
+
+                            }
+                        });
+                        Log.i("judgeActivity", "使用本地数据更新risk");
+                        break;
+                    }
 
                 }
             } catch (InterruptedException e) {
@@ -188,11 +265,12 @@ public class JudgeActivity extends AppCompatActivity {
      *
      * @return
      */
-    public double updateRisk() {
+    public void updateRisk() {
         Bundle bundle = judgeUtils.judgeFormHistory();
         List<MacRisk> macRisks = (List<MacRisk>) bundle.get("macRisks");
         List<TransRisk> transRisks = (List<TransRisk>) bundle.get("transRisks");
         List<GPSRisk> gpsRisks = (List<GPSRisk>) bundle.get("gpsRisks");
+
         //更新列表
         for (MacRisk mr : macRisks) {
             meetMacList.add(mr.getMacAddress());
@@ -203,11 +281,18 @@ public class JudgeActivity extends AppCompatActivity {
         for (TransRisk tr : transRisks) {
             transList.add(new TransportationEntity(tr.type, tr.NO, tr.seat, tr.date));
         }
-        double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
-        if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
-            risk = tempRisk;
+        List<LearningData> dataList = dbHelper.getSession().getLearningDataDao().queryBuilder().orderDesc(LearningDataDao.Properties.Date).limit(1).list();
+        if (null != dataList && dataList.size() > 0) {
+            risk = dataList.get(0).getLabel();
+        } else {
+            risk = 0;
         }
-        return risk;
+        checkCurDeviceRisk(risk);
+
+//        double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
+//        if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
+//            risk = tempRisk;
+//        }
     }
 
     //调用回调函数将信息发送至自己的服务器和OneNet服务器
@@ -226,30 +311,40 @@ public class JudgeActivity extends AppCompatActivity {
 
         try {
             mServerMessenger.send(message);
+
+            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
+            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
+            learning.startLearning();
+
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
+
     public void infer(Bundle bundle) {
 
         double avgStrength = bundle.getDouble("avgStrength", 0);
         double bluetoothTime = bundle.getDouble("bluetoothTime", 0);
         double transCount = bundle.getDouble("transCount", 0);
         double avgSeatDiff = bundle.getDouble("avgSeatDiff", 0);
+        avgSeatDiff = (transCount == 0 ? 10 : (avgSeatDiff * 0.01));
         double avgDistance = bundle.getDouble("avgDistance", 0);
+        avgDistance=(avgDistance==0?51:avgDistance);
         double gpsTime = bundle.getDouble("gpsTime", 0);
 
-        double[] dataArray = {avgStrength, bluetoothTime, transCount, transCount == 0 ? 10 : (avgSeatDiff * 0.01), avgDistance, gpsTime};
+        double[] dataArray = {avgStrength, bluetoothTime, transCount, avgSeatDiff, avgDistance, gpsTime};
 
         //等待生成数据和加载模型
+        double finalAvgSeatDiff = avgSeatDiff;
+        double finalAvgDistance = avgDistance;
         new Thread(() -> {
             try {
                 if (TrainModel.model == null) {
                     Log.i("Learning", "model is not loaded yet");
-                    Log.e("loading model", "正在尝试加载模型" );
+                    Log.e("loading model", "正在尝试加载模型");
                     TrainModel.model = ModelSerializer.restoreMultiLayerNetwork(
                             TrainModel.locateToLoadModel, false);
-                    Log.e("loading model", "已经尝试加载模型" );
+                    Log.e("loading model", "已经加载模型");
                 }
 
                 INDArray sample_to_infer = Nd4j.create(ArrayUtil.flattenDoubleArray(dataArray), sampleShape);
@@ -258,15 +353,19 @@ public class JudgeActivity extends AppCompatActivity {
                 int[] pl = index.toIntVector();
                 int result = pl[0];
                 Log.e("federated learning", "推断结果是" + result);
-                Log.i("federated learning", "推断结果是" + result);
-                Log.i("federated learning", "推断结果是" + result);
-                Log.i("federated learning", "推断结果是" + result);
 
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String dateStr = sdf.format(new Date());
+                Date date = sdf.parse(dateStr);
+
+                LearningData learningData = new LearningData(result, avgStrength, bluetoothTime, transCount, finalAvgSeatDiff, finalAvgDistance, gpsTime, date);
+                dbHelper.getSession().getLearningDataDao().insert(learningData);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();
     }
+
     /**
      * 判断当前设备的风险等级并更新UI
      */
@@ -286,16 +385,17 @@ public class JudgeActivity extends AppCompatActivity {
         // 给RISK_LEVEL赋值即可更新风险等级【0:无风险 1:低风险 2:中风险 3:高风险】
 
         //暂时先这样写，有时间尝试换成机器学习算法。
-        if (risk <= 0) {
-            RISK_LEVEL = 0;
-        } else if (risk < 2) {
-            RISK_LEVEL = 1;
-        } else if (risk >= 3 &&risk<10) {
-            RISK_LEVEL = 2;
-        }else{
-            RISK_LEVEL=3;
-        }
-        // RISK_LEVEL = 3;
+        //        if (risk <= 0) {
+        //            RISK_LEVEL = 0;
+        //        } else if (risk < 2) {
+        //            RISK_LEVEL = 1;
+        //        } else if (risk >= 3 && risk < 10) {
+        //            RISK_LEVEL = 2;
+        //        } else {
+        //            RISK_LEVEL = 3;
+        //        }
+
+         RISK_LEVEL = (int)risk;
 
         // 更新sharedpreference中的风险等级
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();
@@ -320,7 +420,8 @@ public class JudgeActivity extends AppCompatActivity {
         listViewCloseTime.setAdapter(timeAdapter);
 
         TransAdapter transAdapter = new TransAdapter(getApplicationContext(), transList);
-        tvMeetCount.setText(meetTimeList.size() + "");
+        listViewCloseTrans.setAdapter(transAdapter);
+//        tvMeetCount.setText(meetTimeList.size() + "");
 
     }
 
@@ -379,8 +480,13 @@ public class JudgeActivity extends AppCompatActivity {
         listViewCloseDevice = findViewById(R.id.lv_close_device);
         listViewCloseTime = findViewById(R.id.lv_close_time);
         listViewCloseTrans = findViewById(R.id.lv_close_trans);
-        tvMeetCount = findViewById(R.id.tv_meet_time_count);
+//        tvMeetCount = findViewById(R.id.tv_meet_time_count);
         btnUploadData = findViewById(R.id.btn_upload_data);
+        // tablayout
+        closeTablayout = findViewById(R.id.close_tablayout);
+        layoutDevice = findViewById(R.id.layout_close_device);
+        layoutTime = findViewById(R.id.layout_close_time);
+        layoutTrans = findViewById(R.id.layout_close_trans);
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");// HH:mm:ss
         //获取当前时间
@@ -399,22 +505,30 @@ public class JudgeActivity extends AppCompatActivity {
                 break;
             case 1:// 低风险
                 layout_high.setVisibility(View.INVISIBLE);
-                layout_mid.setVisibility(View.INVISIBLE);
-                layout_low.setVisibility(View.VISIBLE);
-                layout_zero.setVisibility(View.INVISIBLE);
-                break;
-            case 2:// 中风险
-                layout_high.setVisibility(View.INVISIBLE);
                 layout_mid.setVisibility(View.VISIBLE);
                 layout_low.setVisibility(View.INVISIBLE);
                 layout_zero.setVisibility(View.INVISIBLE);
+//                layout_high.setVisibility(View.INVISIBLE);
+//                layout_mid.setVisibility(View.INVISIBLE);
+//                layout_low.setVisibility(View.VISIBLE);
+//                layout_zero.setVisibility(View.INVISIBLE);
                 break;
-            case 3:// 高风险
+            case 2:// 中风险
                 layout_high.setVisibility(View.VISIBLE);
                 layout_mid.setVisibility(View.INVISIBLE);
                 layout_low.setVisibility(View.INVISIBLE);
                 layout_zero.setVisibility(View.INVISIBLE);
+//                layout_high.setVisibility(View.INVISIBLE);
+//                layout_mid.setVisibility(View.VISIBLE);
+//                layout_low.setVisibility(View.INVISIBLE);
+//                layout_zero.setVisibility(View.INVISIBLE);
                 break;
+//            case 3:// 高风险
+//                layout_high.setVisibility(View.VISIBLE);
+//                layout_mid.setVisibility(View.INVISIBLE);
+//                layout_low.setVisibility(View.INVISIBLE);
+//                layout_zero.setVisibility(View.INVISIBLE);
+//                break;
         }
     }
 
