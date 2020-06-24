@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,13 +17,22 @@ import com.amap.api.fence.GeoFence;
 import com.amap.api.fence.GeoFenceClient;
 import com.amap.api.fence.GeoFenceListener;
 import com.amap.api.location.DPoint;
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.geocoder.GeocodeQuery;
+import com.amap.api.services.geocoder.GeocodeResult;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeResult;
+import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
+import com.ecnu.traceability.model.User;
 
 import java.util.List;
 
-public class FencesService extends Service {
+public class FencesService extends Service implements GeocodeSearch.OnGeocodeSearchListener{
     private String macAddress;
     private static final String TAG="FencesService";
+    private DBHelper dbHelper = DBHelper.getInstance();
+    public GeocodeSearch geocoderSearch = null;
 
     //实例化地理围栏客户端
     GeoFenceClient mGeoFenceClient = null;
@@ -36,29 +46,75 @@ public class FencesService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        dbHelper.init(this);
         macAddress= OneNetDeviceUtils.macAddress;
 
         IntentFilter filter = new IntentFilter(
                 ConnectivityManager.CONNECTIVITY_ACTION);
         filter.addAction(GEOFENCE_BROADCAST_ACTION);
         registerReceiver(mGeoFenceReceiver, filter);
-        addFence();
+
+        geocoderSearch = new GeocodeSearch(this);
+        geocoderSearch.setOnGeocodeSearchListener(this);
+
+        String address=getUserAddress();
+        locationToLatlon(address);
     }
 
-    public void addFence(){
+    public String getUserAddress(){
+        List<User> list=dbHelper.getSession().getUserDao().loadAll();
+        if(null!=list&&list.size()>0){
+            User user=list.get(0);
+            return user.getAddress();
+        }else{
+            return null;
+        }
+    }
+    /**
+     * 逆地理坐标转换
+     * @param address
+     */
+    public void locationToLatlon(String address) {
+        // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
+//        RegeocodeQuery query = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
+        GeocodeQuery query=new GeocodeQuery(address,"");
+        geocoderSearch.getFromLocationNameAsyn(query);//异步方法
+    }
+    //逆地理编码
+    @Override
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
+        Log.e("LocationAnalysis", regeocodeResult.getRegeocodeAddress().getCity());
+        regeocodeResult.getRegeocodeAddress().getCity();
+
+    }
+    //地理编码
+    @Override
+    public void onGeocodeSearched(GeocodeResult geocodeResult, int i) {
+        LatLonPoint latlon = geocodeResult.getGeocodeAddressList().get(0).getLatLonPoint();
+        Log.i(TAG, latlon.getLatitude()+"\t"+latlon.getLongitude());
+        DPoint dPoint=new DPoint();
+        dPoint.setLatitude(latlon.getLatitude());
+        dPoint.setLongitude(latlon.getLongitude());
+        addFence(dPoint);
+
+        Log.i(TAG, "===================");
+
+    }
+
+    public void addFence(DPoint centerPoint){
         if (mGeoFenceClient != null) {
             mGeoFenceClient.removeGeoFence();
         } else {
             mGeoFenceClient = new GeoFenceClient(this);
         }
         //创建一个中心点坐标
-        DPoint centerPoint = new DPoint();
+        //DPoint centerPoint = new DPoint();
         //设置中心点纬度
-        centerPoint.setLatitude(39.123D);
+        //centerPoint.setLatitude(39.123D);
         //设置中心点经度
-        centerPoint.setLongitude(116.123D);
+        //centerPoint.setLongitude(116.123D);
         //执行添加围栏的操作
-        mGeoFenceClient.addGeoFence(centerPoint, 100f, "公司打卡");
+        mGeoFenceClient.addGeoFence(centerPoint, 300f, "公司打卡");
         mGeoFenceClient.setGeoFenceListener(fenceListenter);
         mGeoFenceClient.setActivateAction(GeoFenceClient.GEOFENCE_IN | GeoFenceClient.GEOFENCE_OUT | GeoFenceClient.GEOFENCE_STAYED);
         mGeoFenceClient.createPendingIntent(GEOFENCE_BROADCAST_ACTION);
@@ -90,15 +146,24 @@ public class FencesService extends Service {
                 Bundle bundle = intent.getExtras();
                 //获取围栏行为：
                 int status = bundle.getInt(GeoFence.BUNDLE_KEY_FENCESTATUS);//处理
+
+                SharedPreferences.Editor editor = getSharedPreferences("fence_status", MODE_PRIVATE).edit();
+
                 switch (status){
                     case GeoFence.STATUS_IN:
                         Log.i(TAG, "从外部进入");
+                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_IN);
+                        editor.apply();
                         break;
                     case GeoFence.STATUS_OUT:
                         Log.i(TAG, "从内部出去");
+                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_OUT);
+                        editor.apply();
                         break;
                     case GeoFence.STATUS_STAYED:
                         Log.i(TAG, "在内部停留超过十分钟");
+                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_STAYED);
+                        editor.apply();
                         break;
                 }
 

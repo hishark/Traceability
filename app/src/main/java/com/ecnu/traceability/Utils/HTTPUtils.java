@@ -85,7 +85,7 @@ public class HTTPUtils {
         try {
             requestContent.put("macAddress", device.getMac());
             requestContent.put("deviceId", device.getDeviceId());
-            requestContent.put("tel", "19121677361");
+            requestContent.put("tel", "null");
             requestContent.put("flag", "true");
         } catch (JSONException e) {
             e.printStackTrace();

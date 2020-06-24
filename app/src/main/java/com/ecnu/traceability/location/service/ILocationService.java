@@ -2,17 +2,21 @@ package com.ecnu.traceability.location.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.amap.api.fence.GeoFence;
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.model.LatLonPoint;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,6 +30,8 @@ public class ILocationService extends Service {
     //声明AMapLocationClientOption对象
     public AMapLocationClientOption mLocationOption = null;
 
+    private long count=0;
+    private InfoToOneNet oneNetSender;
 
     //声明定位回调监听器
     public AMapLocationListener mLocationListener = new AMapLocationListener() {
@@ -37,6 +43,16 @@ public class ILocationService extends Service {
             LocationEntity entity = new LocationEntity(aMapLocation.getLatitude(), aMapLocation.getLongitude(), date);
             dbHelper.getSession().getLocationEntityDao().insert(entity);
             Log.e(TAG, "------------------------add to database---------------------");
+            if(count%5==0){
+                //查询当前的风险等级，如果风险等级为高，主动实时向OneNET
+                SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
+                int fenceStatus = sharedPreferences.getInt("FENCE_STATUS", 4);
+                if(fenceStatus== GeoFence.STATUS_OUT){
+                    //实时向oneNET发送位置
+                    oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()),date);
+                }
+                count++;
+            }
         }
     };
 
@@ -46,6 +62,7 @@ public class ILocationService extends Service {
         super.onCreate();
         dbHelper.init(this);
         startPreciseLocation();
+        oneNetSender=new InfoToOneNet(dbHelper);
     }
 
     public void startPreciseLocation() {

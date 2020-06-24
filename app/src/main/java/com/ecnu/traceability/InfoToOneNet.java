@@ -12,6 +12,9 @@ import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.model.LatLonPoint;
+import com.ecnu.traceability.model.LocalDevice;
+import com.ecnu.traceability.model.User;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,6 +22,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -27,26 +31,61 @@ public class InfoToOneNet {
 
     private DBHelper dbHelper = DBHelper.getInstance();
     private static final String TAG = "InfoToOneNet";
+    private  String deviceId;
 
 
     public InfoToOneNet(DBHelper dbHelper) {
         this.dbHelper = dbHelper;
+        List<LocalDevice> devices=dbHelper.getSession().getLocalDeviceDao().loadAll();
+        if(null!=devices&&devices.size()>0){
+            LocalDevice device=devices.get(0);
+            this.deviceId=device.getDeviceId();
+        }else{
+            this.deviceId="598576209";
+        }
+
+    }
+
+    public void pushRealTimeLocation(LatLonPoint latLonPoint, Date date) {
+        //String deviceId = "601016239";
+        String datastream = "data_flow_4";
+
+        JSONObject location = new JSONObject();
+        JSONObject request = new JSONObject();
+
+        try {
+            location.putOpt("lat", latLonPoint.getLatitude());
+            location.putOpt("lon", latLonPoint.getLongitude());
+            location.putOpt("date", date);
+            JSONArray datastreams = new JSONArray();
+            JSONObject dsObject = new JSONObject();
+            dsObject.putOpt("id", datastream);
+            dsObject.putOpt("datapoints", location);
+            datastreams.put(dsObject);
+            request.putOpt("datastreams", datastreams);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        OneNetDeviceUtils.sendData(deviceId, request);
+
     }
 
     public void pushLocationMapData(Map<String, Integer> locationMap) {
         JSONArray datapoints = processLocationMapRawData(locationMap);
         sendLocationDateToServer(datapoints);
     }
+
     public void pushReportAndpersonCountData(List<ReportInfoEntity> reportInfoList) {
         JSONArray datapoints = prepareReportData(reportInfoList);
-        datapoints=processCountRawData(datapoints);
+        datapoints = processCountRawData(datapoints);
         sendReportInfoToOneNet(datapoints);
     }
 
-    public void pushMapDateToOneNet( List<LocationEntity> locationList) {
+    public void pushMapDateToOneNet(List<LocationEntity> locationList) {
 //        List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
 //        HTTPUtils.addLocationInfoList(locationList);
-        String deviceId = "601016239";
+        //String deviceId = "601016239";
         String datastream = "data_flow_1";
         JSONArray datapoints = new JSONArray();
         try {
@@ -76,8 +115,9 @@ public class InfoToOneNet {
         }
 
     }
+
     public void sendReportInfoToOneNet(JSONArray datapoints) {
-        String deviceId = "601016239";
+        //String deviceId = "601016239";
         String datastream = "data_flow_2";
         try {
             JSONObject dsObject = new JSONObject();
@@ -178,7 +218,7 @@ public class InfoToOneNet {
 
     public void sendLocationDateToServer(JSONArray datapoints) {
 
-        String deviceId = "601016239";
+        //String deviceId = "601016239";
         String datastream = "data_flow_3";
 
         try {

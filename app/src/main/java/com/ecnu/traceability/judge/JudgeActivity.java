@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ecnu.traceability.BaseActivity;
 import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
@@ -33,6 +34,7 @@ import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.location.service.FencesService;
 import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.machine_learning.LearningData;
 import com.ecnu.traceability.machine_learning.LearningDataDao;
@@ -54,7 +56,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class JudgeActivity extends AppCompatActivity {
+public class JudgeActivity extends BaseActivity {
 
     public static final int MAX_RISK_LEVEL = 2;
     private static final int[] sampleShape = {1, 6};//数据集格式是一行三列不包括label
@@ -329,7 +331,7 @@ public class JudgeActivity extends AppCompatActivity {
         double avgSeatDiff = bundle.getDouble("avgSeatDiff", 0);
         avgSeatDiff = (transCount == 0 ? 10 : (avgSeatDiff * 0.01));
         double avgDistance = bundle.getDouble("avgDistance", 0);
-        avgDistance=(avgDistance==0?51:avgDistance);
+        avgDistance = (avgDistance == 0 ? 51 : avgDistance);
         double gpsTime = bundle.getDouble("gpsTime", 0);
 
         double[] dataArray = {avgStrength, bluetoothTime, transCount, avgSeatDiff, avgDistance, gpsTime};
@@ -395,8 +397,8 @@ public class JudgeActivity extends AppCompatActivity {
         //            RISK_LEVEL = 3;
         //        }
 
-         RISK_LEVEL = (int)risk;
-
+        RISK_LEVEL = (int) risk;
+        fence(RISK_LEVEL);
         // 更新sharedpreference中的风险等级
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();
         editor.putInt("RISK_LEVEL", RISK_LEVEL);
@@ -423,6 +425,22 @@ public class JudgeActivity extends AppCompatActivity {
         listViewCloseTrans.setAdapter(transAdapter);
 //        tvMeetCount.setText(meetTimeList.size() + "");
 
+    }
+    //判断是否需要开启围栏
+    public void fence(int RISK_LEVEL){
+        Intent fencesIntent = new Intent(this, FencesService.class);
+        switch (RISK_LEVEL) {
+            case 0:
+                break;
+            case 1:
+                //围栏服务
+                startService(fencesIntent);//开启围栏，出去围栏实时自动定位
+                break;
+            case 2:
+                //围栏服务
+                startService(fencesIntent);//开启围栏，出去围栏实时自动定位
+                break;
+        }
     }
 
     //    ---------------------------------------------Messager回调函数开始-------------------------------------------------

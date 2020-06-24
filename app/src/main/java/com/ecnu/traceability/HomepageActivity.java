@@ -5,12 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.BaseAdapter;
 
+import com.amap.api.fence.GeoFence;
 import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
@@ -55,6 +57,7 @@ import com.ecnu.traceability.information_reporting.InformationReportingActivity;
 import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
+import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
@@ -64,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
+
 public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
     private static final int REQUEST_PERMISSION = 10;
@@ -111,6 +115,11 @@ public class HomepageActivity extends BaseActivity {
 
         dbHelper.init(this);
 
+        if (!isUserExist()) {
+            startActivity(SignupActivity.class);
+        }
+
+
         //蓝牙服务
         Intent bluetoothIntent = new Intent(this, IBluetoothService.class);
         //定位服务
@@ -118,22 +127,20 @@ public class HomepageActivity extends BaseActivity {
         startService(bluetoothIntent);
         startService(locationIntent);
 
-        Intent riskIntent=new Intent(this, RiskReportingService.class);
+        Intent riskIntent = new Intent(this, RiskReportingService.class);
         startService(riskIntent);
 
         Log.e(TAG, "------------------------service start---------------------");
 
-        OneNetDeviceUtils.getDevices(getContext(),dbHelper);
+        OneNetDeviceUtils.initMacAddress(dbHelper);
 
-
-        Transportation transportation=new Transportation(dbHelper);
-        transportation.addTransportationInfo();
-        EPayment payment=new EPayment(dbHelper);
-        payment.addEPaymentInfo();
-
-        //围栏服务
-        Intent fencesIntent=new Intent(this,FencesService.class);
-        startService(fencesIntent);
+        SharedPreferences.Editor editor = getSharedPreferences("fence_status", MODE_PRIVATE).edit();
+        editor.putInt("FENCE_STATUS", 4);
+        editor.apply();
+        //Transportation transportation = new Transportation(dbHelper);
+        //transportation.addTransportationInfo();
+        //EPayment payment = new EPayment(dbHelper);
+        //payment.addEPaymentInfo();
 
         // 上传数据相关
         oneNetDataSender = new InfoToOneNet(dbHelper);
@@ -142,6 +149,16 @@ public class HomepageActivity extends BaseActivity {
         if (!serviceFlag) {
             Intent intent = new Intent(this, LocationAnalysisService.class);
             bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+        }
+    }
+
+
+    public boolean isUserExist() {
+        List<User> users = dbHelper.getSession().getUserDao().loadAll();
+        if (null != users && users.size() > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -156,7 +173,7 @@ public class HomepageActivity extends BaseActivity {
                 || ContextCompat.checkSelfPermission(HomepageActivity.this, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(HomepageActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(HomepageActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                ||ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)!=PackageManager.PERMISSION_GRANTED) {
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(HomepageActivity.this,
                     new String[]{Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_ADMIN,
                             Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION,
@@ -214,6 +231,7 @@ public class HomepageActivity extends BaseActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
     // read and write permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -255,6 +273,7 @@ public class HomepageActivity extends BaseActivity {
             e.printStackTrace();
         }
     }
+
     //    ---------------------------------------------Messager回调函数开始-------------------------------------------------
     private static final int MSG_ID_CLIENT = 1;
     private static final int MSG_ID_SERVER = 2;

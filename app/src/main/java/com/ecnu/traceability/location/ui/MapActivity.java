@@ -65,7 +65,9 @@ public class MapActivity extends AppCompatActivity {
         double y = 0;
         int k = 5;
         for (LocationEntity latlon : locationList) {
-//            if (latlon.getLatitude() != 0 && latlon.getLongitude() != 0) {
+            if (latlon.getLatitude() != 0 && latlon.getLongitude() != 0) {
+                mOriginList.add(new LatLng(latlon.getLatitude(),latlon.getLongitude()));
+            }
 //                count++;
 //                x += latlon.getLatitude();
 //                y += latlon.getLongitude();
@@ -75,7 +77,6 @@ public class MapActivity extends AppCompatActivity {
 //                    y = 0;
 //                }
 //            }
-            mOriginList.add(new LatLng(latlon.getLatitude(),latlon.getLongitude()));
             //            Log.e(TAG,latlon.getLatitude()+"/"+latlon.getLongitude());
         }
         //        for (LatLng lo:mOriginList){

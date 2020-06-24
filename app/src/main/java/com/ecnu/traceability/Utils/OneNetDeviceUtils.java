@@ -9,6 +9,7 @@ import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.model.DeviceItem;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.LocalDeviceDao;
+import com.ecnu.traceability.model.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -27,6 +28,21 @@ public class OneNetDeviceUtils {
     private static final String TAG = "OneNetDeviceUtils";
     public static String macAddress;
 
+    public static String initMacAddress(DBHelper dbHelper) {
+        if (null != macAddress) {
+            return macAddress;
+        } else {
+            List<User> userList = dbHelper.getSession().getUserDao().loadAll();
+            if (null != userList && userList.size() > 0) {
+                User user = userList.get(0);
+                macAddress = user.getMacAddress();
+                return macAddress;
+            } else {
+                return null;
+            }
+        }
+    }
+
     public static boolean isExistsDevice(DBHelper dbHelper, String mac) {
         Log.e("mac", mac);
         List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
@@ -39,7 +55,8 @@ public class OneNetDeviceUtils {
 
     public static void addDevice(DBHelper dbHelper, Context context) {
         JSONObject requestContent = new JSONObject();
-        String mac = MacAddress.getBluetoothMAC(context);
+//        String mac = MacAddress.getBluetoothMAC(context);
+        String mac =initMacAddress(dbHelper);
         macAddress = mac;
         if (null != mac) {
             //List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
@@ -62,7 +79,7 @@ public class OneNetDeviceUtils {
 
                             if (0 == errno) {
                                 JsonObject jsobj = (JsonObject) resp.get("data");
-                                String deviceId = jsobj.get("device_id").toString().replaceAll("\"","");
+                                String deviceId = jsobj.get("device_id").toString().replaceAll("\"", "");
                                 LocalDevice device = new LocalDevice(mac, deviceId);
                                 dbHelper.getSession().getLocalDeviceDao().insert(device);
                                 //成功
@@ -93,7 +110,8 @@ public class OneNetDeviceUtils {
     }
 
     public static void getDevices(Context context, DBHelper dbHelper) {
-        String mac = MacAddress.getBluetoothMAC(context);
+//        String mac = MacAddress.getBluetoothMAC(context);
+        String mac =initMacAddress(dbHelper);
         macAddress = mac;
         Map<String, String> urlParams = new HashMap<>();
         OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {

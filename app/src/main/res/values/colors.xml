@@ -5,4 +5,46 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="black_overlay">#66000000</color>
+    <color name="colorAccentTrans">#a0009688</color>
+    <!-- 常用颜色 -->
+    <color name="red">#FFFF0000</color><!-- 红色 -->
+    <color name="red1">#FFE3170D</color><!-- *镉红色 -->
+    <color name="red2">#FFB0171F</color><!-- 印度红色 -->
+    <color name="orange">#FFFF6100</color><!-- 橙色 -->
+    <color name="orange1">#FFFF8000</color><!-- 桔橙色 -->
+    <color name="yellow">#FFFFFF00</color><!-- 黄色 -->
+    <color name="yellow1">#FFFFD700</color><!-- 金黄色 -->
+    <color name="green">#FF00FF00</color><!-- 绿色 -->
+    <color name="green1">#FF3D9140</color><!-- 钴绿色 -->
+    <color name="green2">#FF00C957</color><!-- 翠绿色 -->
+    <color name="green3">#FF385E0F</color><!-- 绿土色 -->
+    <color name="cyan">#FF00FFFF</color><!-- 青色 -->
+    <color name="cyan1">#FF40E0D0</color><!-- 青绿色 -->
+    <color name="cyan2">#FF00C78C</color><!-- 土耳其玉色 -->
+    <color name="blue">#FF0000FF</color><!-- 蓝色 -->
+    <color name="blue1">#FF1E90FF</color><!-- *道格蓝色 -->
+    <color name="blue2">#FF3D59AB</color><!-- 钴蓝色 -->
+    <color name="blue3">#FF03A89E</color><!-- 锰蓝色 -->
+    <color name="blue4">#FF082E54</color><!-- 蓝黑色 -->
+    <color name="blue5">#FF87CEEB</color><!-- 天蓝色 -->
+    <color name="blue6">#FFF0FFFF</color><!-- 浅蓝色 -->
+    <color name="blue7">#FF4169E1</color><!-- 品蓝色 -->
+    <color name="purple">#FFA020F0</color><!-- 紫色 -->
+    <color name="purple1">#FF8A2BE2</color><!-- 紫罗色 -->
+    <color name="purple2">#FFFFC0CB</color><!-- 粉紫色 -->
+    <color name="white">#FFFFFFFF</color><!-- 白色 -->
+    <color name="white1">#FFF8F8FF</color><!-- 白鬼色 -->
+    <color name="white2">#FFF5F5F5</color><!-- 白烟色 -->
+    <color name="black">#FF000000</color><!-- 黑色 -->
+    <color name="gray">#FFC0C0C0</color><!-- 灰色 -->
+    <color name="brown">#FF802A2A</color><!-- 棕色 -->
+
+    <!-- 本工程配色2020.01.24 -->
+    <color name="mywhite">#FFF7F8F9</color><!-- 白色 -->
+    <color name="myblue">#FF024DEE</color><!-- 蓝色 -->
+    <color name="mygray">#FFB8BFCC</color><!-- 灰色 -->
+    <color name="mydarkblue">#FF103CAF</color><!-- 深蓝色 -->
+    <color name="mydarkgray">#FF857991</color><!-- 深灰色 -->
+    <color name="myblack">#FF212D3D</color><!-- 亮黑色 -->
+    <color name="mygreen">#FF049F5C</color><!-- 亮绿色 -->
 </resources>
