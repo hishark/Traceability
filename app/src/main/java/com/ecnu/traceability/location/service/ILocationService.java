@@ -46,13 +46,16 @@ public class ILocationService extends Service {
             if(count%5==0){
                 //查询当前的风险等级，如果风险等级为高，主动实时向OneNET
                 SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
-                int fenceStatus = sharedPreferences.getInt("FENCE_STATUS", 4);
+                int fenceStatus = sharedPreferences.getInt("FENCE_STATUS_", 4);
+                Log.i(TAG, "==========++===="+String.valueOf(fenceStatus)+"==========++====");
                 if(fenceStatus== GeoFence.STATUS_OUT){
+                    Log.i(TAG, "向oneNET发送位置信息");
                     //实时向oneNET发送位置
                     oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()),date);
                 }
-                count++;
             }
+            count++;
+
         }
     };
 

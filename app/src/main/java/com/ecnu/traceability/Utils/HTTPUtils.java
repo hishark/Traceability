@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -33,10 +34,14 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class HTTPUtils {
-    //    private static final String IP = "132.232.144.76";
-    private static final String IP = "192.168.1.8";
+//        private static final String IP = "132.232.144.76";
+    private static final String IP = "192.168.1.4";
     public static final String TAG = "HTTPUtils";
-    private static HttpExecutor httpExecutor = new HttpExecutor(new OkHttpClient());
+    private static OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(120, TimeUnit.SECONDS)//设置连接超时时间
+            .readTimeout(120, TimeUnit.SECONDS)//设置读取超时时间
+            .build();
+    private static HttpExecutor httpExecutor = new HttpExecutor(client);
 
     public static void getDataFromServer(String url, Callback callback) {
         httpExecutor.get(url, callback);

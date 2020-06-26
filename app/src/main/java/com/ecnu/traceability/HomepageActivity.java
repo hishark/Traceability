@@ -57,6 +57,7 @@ import com.ecnu.traceability.information_reporting.InformationReportingActivity;
 import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
+import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
@@ -72,6 +73,8 @@ public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
     private static final int REQUEST_PERMISSION = 10;
     private InfoToOneNet oneNetDataSender = null;
+    private Learning learning;
+
 
     private DBHelper dbHelper = DBHelper.getInstance();
 
@@ -135,8 +138,9 @@ public class HomepageActivity extends BaseActivity {
         OneNetDeviceUtils.initMacAddress(dbHelper);
 
         SharedPreferences.Editor editor = getSharedPreferences("fence_status", MODE_PRIVATE).edit();
-        editor.putInt("FENCE_STATUS", 4);
-        editor.apply();
+        editor.putInt("FENCE_STATUS_", 4);
+        editor.apply();//apply是将修改数据原子提交到内存，而后异步真正提交到硬件磁盘,apply只是原子的提交到内容，后面有调用apply的函数的将会直接覆盖前面的内存数据，这样从一定程度上提高了很多效率。
+        //editor.commit();//commit是同步的提交到硬件磁盘,因此，在多个并发的提交commit的时候，他们会等待正在处理的commit保存到磁盘后在操作，从而降低了效率。
         //Transportation transportation = new Transportation(dbHelper);
         //transportation.addTransportationInfo();
         //EPayment payment = new EPayment(dbHelper);
@@ -150,6 +154,8 @@ public class HomepageActivity extends BaseActivity {
             Intent intent = new Intent(this, LocationAnalysisService.class);
             bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
         }
+        learning = new Learning();
+
     }
 
 
@@ -269,6 +275,11 @@ public class HomepageActivity extends BaseActivity {
 
         try {
             mServerMessenger.send(message);
+
+            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
+            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
+            learning.startLearning();
+
         } catch (RemoteException e) {
             e.printStackTrace();
         }

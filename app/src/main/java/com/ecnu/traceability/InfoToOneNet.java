@@ -15,6 +15,7 @@ import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.model.LatLonPoint;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.User;
+import com.google.gson.JsonArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,17 +51,23 @@ public class InfoToOneNet {
         //String deviceId = "601016239";
         String datastream = "data_flow_4";
 
-        JSONObject location = new JSONObject();
         JSONObject request = new JSONObject();
 
         try {
+            JSONObject location = new JSONObject();
             location.putOpt("lat", latLonPoint.getLatitude());
             location.putOpt("lon", latLonPoint.getLongitude());
             location.putOpt("date", date);
-            JSONArray datastreams = new JSONArray();
+
+            JSONObject datapoint = new JSONObject();
+            datapoint.putOpt("value", location);
+            JSONArray jsonArray=new JSONArray();
+            jsonArray.put(datapoint);
             JSONObject dsObject = new JSONObject();
             dsObject.putOpt("id", datastream);
-            dsObject.putOpt("datapoints", location);
+            dsObject.putOpt("datapoints", jsonArray);
+
+            JSONArray datastreams = new JSONArray();
             datastreams.put(dsObject);
             request.putOpt("datastreams", datastreams);
         } catch (JSONException e) {

@@ -31,8 +31,8 @@ import okhttp3.Response;
 
 public class GPSJudgement {
     public static final int DIS_THRESHOLD = 50;//距离阈值设置为50米
-    public static final int TIME_THRESHOLD = 10;//时间阈值设置为10秒
-    public static final String TAG = "ExposureJudgement";
+    public static final int TIME_THRESHOLD = 20;//时间阈值设置为10秒
+    public static final String TAG = "GPSJudge";
     private DBHelper dbHelper = null;
     private static final double EARTH_RADIUS = 6378137;//赤道半径
 
@@ -43,7 +43,7 @@ public class GPSJudgement {
     // 本地数据库的LocationEntity列表
     private List<LocationEntity> locationEntityList;
     // 来自于服务器端的病人的LocationEntity
-//    private List<LocationEntity> serverDataList;
+    // private List<LocationEntity> serverDataList;
 
     public GPSJudgement(DBHelper dbHelper) {
         this.dbHelper = dbHelper;
@@ -132,8 +132,8 @@ public class GPSJudgement {
                 avgDistance += pdc.distance;
             }
         }
-        avgDistance = avgDistance / (timeLocationList.size() == 0 ? 1 : timeLocationList.size()+1);
-        gpsTime = timeLocationList.size() * 10*0.0001;
+        avgDistance = avgDistance / (timeLocationList.size() == 0 ? 1 : timeLocationList.size() + 1);
+        gpsTime = timeLocationList.size() * 10 * 0.0001;
 
         return timeLocationList;
     }
@@ -143,28 +143,71 @@ public class GPSJudgement {
 
     }
 
-
-    //计算患者与用户之间GPS定位位置相同并且时间相同的数量（该数量与时间有关定位每10s一次，有多少次就有多少个10s的接触）
-    public Bundle judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
-        List<PointDistance> disList = new ArrayList<PointDistance>();
-        //计算距离
+    public List<PointDistance> dateJudge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
+        List<PointDistance> timeList = new ArrayList<PointDistance>();
         for (LocationEntity serData : serverDataList) {
             for (LocationEntity locData : localData) {
-                double distance = calDistance(serData, locData);
-                if (distance <= DIS_THRESHOLD) {
-                    disList.add(new PointDistance(serData, locData, distance));
+                if (DateUtils.dataDiff(serData.getDate(), locData.getDate()) < TIME_THRESHOLD) {
+                    timeList.add(new PointDistance(serData, locData, 0));
                 }
             }
         }
-        //判断时间段是否相同
-        List<LocationEntity> timeLocationList = dateJudge(disList);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("gpsJudge", (Serializable) timeLocationList);
-        bundle.putDouble("avgDistance",avgDistance);
-        bundle.putDouble("gpsTime",gpsTime);
-        //return dateList.size();
-        return bundle;
+        return timeList;
     }
+
+    public List<PointDistance> distanceJudge(List<PointDistance> dateList) {
+        List<PointDistance> list = new ArrayList<>();
+        for (PointDistance pd : dateList) {
+            pd.distance = calDistance(pd.entity1, pd.entity2);
+            if (pd.distance <= DIS_THRESHOLD) {
+                list.add(pd);
+            }
+        }
+        return list;
+    }
+
+    public Bundle judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
+        List<PointDistance> dateList = dateJudge(serverDataList, localData);
+        List<PointDistance> disList = distanceJudge(dateList);
+        List<LocationEntity> list = new ArrayList<>();
+        for (PointDistance data : disList) {
+            list.add(data.entity1);
+            avgDistance += data.distance;
+        }
+        avgDistance = avgDistance / (disList.size() == 0 ? 1 : disList.size() + 1);
+        gpsTime = disList.size() * 10 * 0.0001;
+
+        //判断时间段是否相同
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("gpsJudge", (Serializable) list);
+        bundle.putDouble("avgDistance", avgDistance);
+        bundle.putDouble("gpsTime", gpsTime);
+        return bundle;
+
+    }
+    //计算患者与用户之间GPS定位位置相同并且时间相同的数量（该数量与时间有关定位每10s一次，有多少次就有多少个10s的接触）
+    //    public Bundle judge(List<LocationEntity> serverDataList, List<LocationEntity> localData) {
+    //        List<PointDistance> disList = new ArrayList<PointDistance>();
+    //        //计算距离
+    //        for (LocationEntity serData : serverDataList) {
+    //            Log.i(TAG, "judge");
+    //            for (LocationEntity locData : localData) {
+    //                double distance = calDistance(serData, locData);
+    //                if (distance <= DIS_THRESHOLD) {
+    //                    disList.add(new PointDistance(serData, locData, distance));
+    //                }
+    //            }
+    //        }
+    //        //判断时间段是否相同
+    //        List<LocationEntity> timeLocationList = dateJudge(disList);
+    //        Bundle bundle = new Bundle();
+    //        bundle.putSerializable("gpsJudge", (Serializable) timeLocationList);
+    //        bundle.putDouble("avgDistance",avgDistance);
+    //        bundle.putDouble("gpsTime",gpsTime);
+    //        //return dateList.size();
+    //        Log.i(TAG, "judge: ========================");
+    //        return bundle;
+    //    }
 
     //解析服务端发送来的数据
     public List<LocationEntity> parseDate(Response response) {
@@ -189,6 +232,7 @@ public class GPSJudgement {
         } catch (JSONException | ParseException | IOException e) {
             e.printStackTrace();
         }
+        Log.i(TAG, "parseDate++++++++++++++++++++");
         return serverDataList;
     }
 

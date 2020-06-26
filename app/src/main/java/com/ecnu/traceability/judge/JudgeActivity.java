@@ -96,10 +96,12 @@ public class JudgeActivity extends BaseActivity {
     private LinearLayout layoutTime;
     private LinearLayout layoutTrans;
 
+    private boolean dataReceiveFlag=false;
+
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i("judgeActivity", "============================");
+        //Log.i("judgeActivity", "============================");
     }
 
     @Override
@@ -112,6 +114,7 @@ public class JudgeActivity extends BaseActivity {
         macAddressJudge = new MACAddressJudge(dbHelper);
 
         learning = new Learning();
+        learning.downloadModel();
 
         //初始化风险判断模块快
         judgeUtils = new Judge(getApplicationContext(), dbHelper);
@@ -215,11 +218,11 @@ public class JudgeActivity extends BaseActivity {
     }
 
     public void updateRiskInfo() {
+
         new Thread(() -> {
             try {
-                while (true) {
+                while (!dataReceiveFlag) {
                     Thread.sleep(10000);
-
                     runOnUiThread(new Runnable() {
                         public void run() {
                             // 检查是否有变化
@@ -228,6 +231,7 @@ public class JudgeActivity extends BaseActivity {
                                 risk = newRisk;
                                 Bundle bundle = judgeUtils.getDateForFederatedLearnging();
                                 infer(bundle);
+                                dataReceiveFlag=true;
                             }
                             //更新列表
                             meetMacList = new ArrayList<>();
@@ -354,6 +358,8 @@ public class JudgeActivity extends BaseActivity {
                 INDArray index = predicted.argMax();
                 int[] pl = index.toIntVector();
                 int result = pl[0];
+                risk=result;//更新risk
+
                 Log.e("federated learning", "推断结果是" + result);
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

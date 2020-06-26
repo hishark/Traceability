@@ -152,17 +152,17 @@ public class FencesService extends Service implements GeocodeSearch.OnGeocodeSea
                 switch (status){
                     case GeoFence.STATUS_IN:
                         Log.i(TAG, "从外部进入");
-                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_IN);
+                        editor.putInt("FENCE_STATUS_", GeoFence.STATUS_IN);
                         editor.apply();
                         break;
                     case GeoFence.STATUS_OUT:
                         Log.i(TAG, "从内部出去");
-                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_OUT);
+                        editor.putInt("FENCE_STATUS_", GeoFence.STATUS_OUT);
                         editor.apply();
                         break;
                     case GeoFence.STATUS_STAYED:
                         Log.i(TAG, "在内部停留超过十分钟");
-                        editor.putInt("FENCE_STATUS", GeoFence.STATUS_STAYED);
+                        editor.putInt("FENCE_STATUS_", GeoFence.STATUS_STAYED);
                         editor.apply();
                         break;
                 }

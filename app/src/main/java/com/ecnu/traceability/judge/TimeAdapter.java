@@ -39,10 +39,10 @@ public class TimeAdapter extends BaseAdapter {
 
     }
 
-    public String  latlonToLocation(LatLonPoint point) throws AMapException {
+    public String latlonToLocation(LatLonPoint point) throws AMapException {
         // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
         RegeocodeQuery query = new RegeocodeQuery(point, 200, GeocodeSearch.AMAP);
-        RegeocodeAddress result=geocoderSearch.getFromLocation(query);//异步方法
+        RegeocodeAddress result = geocoderSearch.getFromLocation(query);//异步方法
         return result.getCity();
     }
 
@@ -77,15 +77,15 @@ public class TimeAdapter extends BaseAdapter {
         }
 
         if (meetTimeList.get(position) != null) {
-            SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String time=sdf.format(meetTimeList.get(position).getDate());
-            String city="";
-            try {
-                city=latlonToLocation(new LatLonPoint( meetTimeList.get(position).getLatitude(),meetTimeList.get(position).getLongitude()));
-            } catch (AMapException e) {
-                e.printStackTrace();
-            }
-            viewHolder.tvTime.setText(city+time);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String time = sdf.format(meetTimeList.get(position).getDate());
+            String city = "";
+//            try {
+//                city = latlonToLocation(new LatLonPoint(meetTimeList.get(position).getLatitude(), meetTimeList.get(position).getLongitude()));
+//            } catch (AMapException e) {
+//                e.printStackTrace();
+//            }
+            viewHolder.tvTime.setText(city + time);
         }
 
         return view;

@@ -1,7 +1,5 @@
 package com.ecnu.traceability.machine_learning;
 
-import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
@@ -11,17 +9,12 @@ import com.ecnu.traceability.judge.JudgeActivity;
 
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.util.ModelSerializer;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.util.ArrayUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Learning {
@@ -105,7 +98,11 @@ public class Learning {
                     idx++;
                 }
                 br.close();
-
+                Log.e(TAG, "数据集的数量是："+String.valueOf(idx));
+                if(idx==0){
+                    Log.e(TAG, "数据不足停止训练" );
+                    return;
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
