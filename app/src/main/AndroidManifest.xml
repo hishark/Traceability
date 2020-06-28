@@ -34,7 +34,8 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".SignupActivity"></activity>
+        <activity android:name=".SignupActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".HomepageActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
