@@ -34,7 +34,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class HTTPUtils {
-//        private static final String IP = "132.232.144.76";
+    //private static final String IP = "132.232.144.76";
     private static final String IP = "192.168.1.4";
     public static final String TAG = "HTTPUtils";
     private static OkHttpClient client = new OkHttpClient.Builder()
@@ -272,7 +272,7 @@ public class HTTPUtils {
 
     public static void getPatientMacAddress(Callback callback) {
         String macAddress = OneNetDeviceUtils.macAddress;
-        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData/"+macAddress;
+        String url = "http://" + IP + ":8080/TraceabilityServer/getPatientData/" + macAddress;
         getDataFromServer(url, callback);
     }
 
@@ -335,7 +335,7 @@ public class HTTPUtils {
     public static void download() {
 
         String url = "http://" + IP + ":8080/TraceabilityServer/download/model";
-        DownloadUtil.get().download(url,  new DownloadUtil.OnDownloadListener() {
+        DownloadUtil.get().download(url, new DownloadUtil.OnDownloadListener() {
             @Override
             public void onDownloadSuccess() {
                 Log.i(TAG, "模型下载成功");
@@ -343,7 +343,8 @@ public class HTTPUtils {
 
             @Override
             public void onDownloading(int progress) {
-//                Log.i(TAG, String.valueOf(progress));
+//                if (progress % 10 == 0)
+//                    Log.i(TAG, String.valueOf(progress));
             }
 
             @Override

@@ -97,6 +97,12 @@ public class Judge {
                     e.printStackTrace();
                 }
 
+                // if(tempMacList.size()>0){
+                //     dbHelper.getSession().getMacRiskDao().deleteAll();
+                //     dbHelper.getSession().getGPSRiskDao().deleteAll();
+                //     dbHelper.getSession().getTransRiskDao().deleteAll();
+                // }
+
                 //////////////////////调用风险判别//////////////////////
                 for (String patientMac : tempMacList) {
                     Log.i("judge ", "-----------------------------start judge-------------------------");
@@ -138,27 +144,27 @@ public class Judge {
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            Log.i("==========", "gps response1");
+            //Log.i("==========", "gps response1");
             List<LocationEntity> serverDataList = gpsJudgement.parseDate(response);
-            Log.i("==========", "gps response2");
+            //Log.i("==========", "gps response2");
 
             Bundle bundle = gpsJudgement.judge(serverDataList, localLocationData);
             List<LocationEntity> tempList = (List<LocationEntity>) bundle.get("gpsJudge");
-            Log.i("==========", "gps response3");
+            //Log.i("==========", "gps response3");
 
             avgDistance=bundle.getDouble("avgDistance",0);//联邦学习数据
             gpsTime+=bundle.getDouble("gpsTime",0);//联邦学习数据
-            Log.i("==========", "gps response4");
+            //Log.i("==========", "gps response4");
 
             risk += tempList.size();
             timeLocationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             //requestCount--;
-            Log.i("==========", "gps response5");
+            //Log.i("==========", "gps response5");
 
             synchronized (this){
                 requestCount--;
             }
-            Log.e("+++++++", "1计数值："+String.valueOf(requestCount));
+            //Log.e("+++++++", "1计数值："+String.valueOf(requestCount));
 
             Log.i("gps risk", String.valueOf(risk));
         }
@@ -183,7 +189,7 @@ public class Judge {
             risk += tempList.size() * 2;
             sameTransportationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             Log.i("transportation risk", String.valueOf(risk));
-            Log.e("=======", "2计数值："+String.valueOf(requestCount));
+            //Log.e("=======", "2计数值："+String.valueOf(requestCount));
             synchronized (this){
                 requestCount--;
             }
@@ -196,12 +202,10 @@ public class Judge {
             try {
                 while (true) {
                     Thread.sleep(2000);
-                    Log.e("judge isFinished", "计数值："+String.valueOf(requestCount));
                     if (requestCount == 0) {
                         for (String mac : patientMacList) {
                             //已经完成推送，向推送信息表添加信息
                             HTTPUtils.addPushedInfo(mac);
-                            Log.e("judge isFinished", "============finished==========");
                         }
                         break;//停止判断
                     }

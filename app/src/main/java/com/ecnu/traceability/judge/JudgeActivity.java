@@ -11,16 +11,12 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.ecnu.traceability.BaseActivity;
 import com.ecnu.traceability.InfoToOneNet;
@@ -28,6 +24,7 @@ import com.ecnu.traceability.R;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
+import com.ecnu.traceability.Utils.NotificationUtil;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.ePayment.EPayment;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
@@ -43,7 +40,6 @@ import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
 import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.transformation.TransformationChildCard;
 
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -62,8 +58,8 @@ public class JudgeActivity extends BaseActivity {
     private static final int[] sampleShape = {1, 6};//数据集格式是一行三列不包括label
 
     private DBHelper dbHelper = DBHelper.getInstance();
-    private GPSJudgement gpsJudgement = null;
-    private MACAddressJudge macAddressJudge = null;
+    //private GPSJudgement gpsJudgement = null;
+    //private MACAddressJudge macAddressJudge = null;
     private InfoToOneNet oneNetDataSender = null;
     private Judge judgeUtils = null;
 
@@ -96,7 +92,7 @@ public class JudgeActivity extends BaseActivity {
     private LinearLayout layoutTime;
     private LinearLayout layoutTrans;
 
-    private boolean dataReceiveFlag=false;
+    private boolean dataReceiveFlag = false;
 
     @Override
     protected void onResume() {
@@ -110,11 +106,11 @@ public class JudgeActivity extends BaseActivity {
         setContentView(R.layout.activity_judge);
         getSupportActionBar().hide();
         dbHelper.init(this);
-        gpsJudgement = new GPSJudgement(dbHelper);
-        macAddressJudge = new MACAddressJudge(dbHelper);
-
+        //gpsJudgement = new GPSJudgement(dbHelper);
+        //macAddressJudge = new MACAddressJudge(dbHelper);
+        dataReceiveFlag = false;
         learning = new Learning();
-        learning.downloadModel();
+        //learning.downloadModel();
 
         //初始化风险判断模块快
         judgeUtils = new Judge(getApplicationContext(), dbHelper);
@@ -159,9 +155,9 @@ public class JudgeActivity extends BaseActivity {
 //        transList.add(new TransportationEntity("火车", "G247", 12, new Date()));
 
         // 计算当前设备的风险等级并更新UI
-        checkCurDeviceRisk(0);
+        updateRiskUI();
+        updateUI(0);
         updateRiskInfo();
-
         // 测试用，点击卡片切换风险等级
         findViewById(R.id.cardview_risklevel).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -228,10 +224,10 @@ public class JudgeActivity extends BaseActivity {
                             // 检查是否有变化
                             double newRisk = judgeUtils.getRisk();
                             if (newRisk > risk) {//选择最大的那个风险
-                                risk = newRisk;
+                                //risk = newRisk;
                                 Bundle bundle = judgeUtils.getDateForFederatedLearnging();
                                 infer(bundle);
-                                dataReceiveFlag=true;
+                                dataReceiveFlag = true;
                             }
                             //更新列表
                             meetMacList = new ArrayList<>();
@@ -240,8 +236,7 @@ public class JudgeActivity extends BaseActivity {
                             meetMacList = judgeUtils.getPatientMacList();
                             meetTimeList = judgeUtils.getSameLocationList();
                             transList = judgeUtils.getSameTransportation();
-                            // 更新当前的风险等级
-                            checkCurDeviceRisk(risk);
+                            updateRiskUI();
                             Log.i("judgeActivity risk", String.valueOf(risk));
                         }
                     });
@@ -251,8 +246,6 @@ public class JudgeActivity extends BaseActivity {
                             @Override
                             public void run() {
                                 updateRisk();
-                                checkCurDeviceRisk(risk);
-
                             }
                         });
                         Log.i("judgeActivity", "使用本地数据更新risk");
@@ -293,8 +286,12 @@ public class JudgeActivity extends BaseActivity {
         } else {
             risk = 0;
         }
-        checkCurDeviceRisk(risk);
-
+        updateRiskUI();
+        updateUI(risk);
+        if (risk > 0) {
+            //显示通知
+            NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离");
+        }
 //        double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
 //        if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
 //            risk = tempRisk;
@@ -358,8 +355,18 @@ public class JudgeActivity extends BaseActivity {
                 INDArray index = predicted.argMax();
                 int[] pl = index.toIntVector();
                 int result = pl[0];
-                risk=result;//更新risk
-
+                risk = result;//更新risk
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 更新当前的风险显示UI
+                        updateUI(risk);
+                    }
+                });
+                if (result > 0) {
+                    //显示通知
+                    NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离");
+                }
                 Log.e("federated learning", "推断结果是" + result);
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -374,51 +381,29 @@ public class JudgeActivity extends BaseActivity {
         }).start();
     }
 
-    /**
-     * 判断当前设备的风险等级并更新UI
-     */
-    private void checkCurDeviceRisk(double risk) {
-        // fake data
-        // meetMacList = new ArrayList<>();
-        // meetTimeList = new ArrayList<>();
-        // meetMacList = judgeUtils.getPatientMacList();
-        // meetTimeList = judgeUtils.getSameLocationList();
-        //        meetMacList = macAddressJudge.getMeetMacList();
-        //        meetTimeList = gpsJudgement.judge();
 
-
-        // 风险等级判断
-        // 判断方法待补充 TODO
-        // ... ...
-        // 给RISK_LEVEL赋值即可更新风险等级【0:无风险 1:低风险 2:中风险 3:高风险】
-
-        //暂时先这样写，有时间尝试换成机器学习算法。
-        //        if (risk <= 0) {
-        //            RISK_LEVEL = 0;
-        //        } else if (risk < 2) {
-        //            RISK_LEVEL = 1;
-        //        } else if (risk >= 3 && risk < 10) {
-        //            RISK_LEVEL = 2;
-        //        } else {
-        //            RISK_LEVEL = 3;
-        //        }
+    public void updateUI(double risk) {
 
         RISK_LEVEL = (int) risk;
-        fence(RISK_LEVEL);
         // 更新sharedpreference中的风险等级
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();
         editor.putInt("RISK_LEVEL", RISK_LEVEL);
         editor.apply();
-
+        fence(RISK_LEVEL);
         // 只要不是无风险，就显示【上传数据按钮】
         if (RISK_LEVEL != 0) {
             btnUploadData.setVisibility(View.VISIBLE);
         } else {
             btnUploadData.setVisibility(View.INVISIBLE);
         }
-
         // 更新风险图标
         updateRiskLevelLayout(RISK_LEVEL);
+    }
+
+    /**
+     * 判断当前设备的风险等级并更新UI
+     */
+    private void updateRiskUI() {
 
         // 更新具体信息
         DeviceAdapter deviceAdapter = new DeviceAdapter(getApplicationContext(), meetMacList);
@@ -432,8 +417,9 @@ public class JudgeActivity extends BaseActivity {
 //        tvMeetCount.setText(meetTimeList.size() + "");
 
     }
+
     //判断是否需要开启围栏
-    public void fence(int RISK_LEVEL){
+    public void fence(int RISK_LEVEL) {
         Intent fencesIntent = new Intent(this, FencesService.class);
         switch (RISK_LEVEL) {
             case 0:

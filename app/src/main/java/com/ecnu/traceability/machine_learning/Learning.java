@@ -84,6 +84,12 @@ public class Learning {
         new Thread(() -> {
             //将数据集写入文件
             try {
+                File file = new File(TrainModel.locateToSaveDataSet.toString());
+                if (file.delete()) {
+                    Log.i("learning", file.getName() + " 文件已被删除！");
+                } else {
+                    Log.i("learning", "文件删除失败！");
+                }
                 BufferedWriter br = new BufferedWriter(new FileWriter(
                         TrainModel.locateToSaveDataSet.toString(), true));
                 StringBuilder sb = new StringBuilder();
@@ -98,9 +104,9 @@ public class Learning {
                     idx++;
                 }
                 br.close();
-                Log.e(TAG, "数据集的数量是："+String.valueOf(idx));
-                if(idx==0){
-                    Log.e(TAG, "数据不足停止训练" );
+                Log.e(TAG, "数据集的数量是：" + String.valueOf(idx));
+                if (idx == 0) {
+                    Log.e(TAG, "数据不足停止训练");
                     return;
                 }
 
@@ -136,6 +142,7 @@ public class Learning {
     }
 
     public void downloadModel() {
+        Log.i(TAG, "downloadModel》》》》》》");
         HTTPUtils.download();//测试下载最新的模型
     }
 

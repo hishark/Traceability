@@ -1,12 +1,29 @@
 package com.ecnu.traceability;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +38,7 @@ import com.ecnu.traceability.ePayment.EPayment;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.judge.JudgeActivity;
+import com.ecnu.traceability.judge.RiskCheckService;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.location.service.FencesService;
@@ -43,6 +61,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.ecnu.traceability.Utils.DBHelper;
@@ -129,10 +149,12 @@ public class HomepageActivity extends BaseActivity {
         Intent locationIntent = new Intent(this, ILocationService.class);
         startService(bluetoothIntent);
         startService(locationIntent);
-
+        //风险主动上报
         Intent riskIntent = new Intent(this, RiskReportingService.class);
         startService(riskIntent);
-
+        //风险自动查询
+        Intent riskCheckIntent = new Intent(this, RiskCheckService.class);
+        startService(riskCheckIntent);
         Log.e(TAG, "------------------------service start---------------------");
 
         OneNetDeviceUtils.initMacAddress(dbHelper);
@@ -155,7 +177,6 @@ public class HomepageActivity extends BaseActivity {
             bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
         }
         learning = new Learning();
-
     }
 
 

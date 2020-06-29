@@ -15,6 +15,7 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
 import com.ecnu.traceability.location.ui.MapActivity;
+import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.model.User;
 
 import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
@@ -45,7 +46,9 @@ public class SignupActivity extends BaseActivity {
             Toast.makeText(this, "无法准确获取本机蓝牙地址，请按照提示去设置中查找", 5000).show();
         }
         confirmBtn.setOnClickListener(listener);
-
+        //初始化系统的模型
+        Learning learning = new Learning();
+        learning.downloadModel();
     }
 
     private View.OnClickListener listener = new View.OnClickListener() {

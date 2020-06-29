@@ -1,6 +1,7 @@
 package com.ecnu.traceability.Utils;
 
 import android.os.Environment;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -34,10 +35,10 @@ public class DownloadUtil {
     }
 
     /**
-     * @param url 下载连接
+     * @param url      下载连接
      * @param listener 下载监听
      */
-    public void download(final String url,  final OnDownloadListener listener) {
+    public void download(final String url, final OnDownloadListener listener) {
         Request request = new Request.Builder().url(url).build();
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -45,21 +46,29 @@ public class DownloadUtil {
                 // 下载失败
                 listener.onDownloadFailed();
             }
+
             @Override
             public void onResponse(Call call, Response response) throws IOException {
 
                 InputStream is;
+                long total = response.body().contentLength();
+                //Log.i("sum_num", String.valueOf(total));
                 is = response.body().byteStream();
                 FileOutputStream fos;
-                File ff  = new File(TrainModel.dir,"updatedModel.zip" );
+                File ff = new File(TrainModel.dir, "updatedModel.zip");
                 if (!ff.exists()) {
                     ff.createNewFile();
                 }
                 fos = new FileOutputStream(ff);
                 int len = 0;
                 byte[] bytes = new byte[1024];
+                //int sum = 0;
                 while ((len = is.read(bytes)) != -1) {
                     fos.write(bytes, 0, len);
+                    //sum+=len;
+                    //int progress = (int) (sum * 1.0f / total * 100);
+                    // 下载中
+                    //listener.onDownloading(progress);
                 }
                 if (is != null) {
                     is.close();
@@ -110,8 +119,7 @@ public class DownloadUtil {
     /**
      * @param saveDir
      * @return
-     * @throws IOException
-     * 判断下载目录是否存在
+     * @throws IOException 判断下载目录是否存在
      */
     private String isExistDir(String saveDir) throws IOException {
         // 下载位置
@@ -125,8 +133,7 @@ public class DownloadUtil {
 
     /**
      * @param url
-     * @return
-     * 从下载连接中解析出文件名
+     * @return 从下载连接中解析出文件名
      */
     @NonNull
     private String getNameFromUrl(String url) {
@@ -140,8 +147,7 @@ public class DownloadUtil {
         void onDownloadSuccess();
 
         /**
-         * @param progress
-         * 下载进度
+         * @param progress 下载进度
          */
         void onDownloading(int progress);
 
