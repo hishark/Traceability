@@ -1,53 +1,12 @@
 package com.ecnu.traceability;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Vibrator;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.BaseAdapter;
-
-import com.amap.api.fence.GeoFence;
-import com.ecnu.traceability.Utils.GeneralUtils;
-import com.ecnu.traceability.Utils.HTTPUtils;
-import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
-import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
-import com.ecnu.traceability.ePayment.EPayment;
-import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
-import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
-import com.ecnu.traceability.judge.JudgeActivity;
-import com.ecnu.traceability.judge.RiskCheckService;
-import com.ecnu.traceability.location.Dao.LocationEntity;
-import com.ecnu.traceability.location.Dao.LocationEntityDao;
-import com.ecnu.traceability.location.service.FencesService;
-import com.ecnu.traceability.location.ui.MapActivity;
-
 import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,38 +15,44 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.GeneralUtils;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
-import com.ecnu.traceability.data_analyze.BluetoothAnalysisUtil;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.data_analyze.RiskReportingService;
+import com.ecnu.traceability.ePayment.EPayment;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
+import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntityDao;
 import com.ecnu.traceability.information_reporting.InformationReportingActivity;
 import com.ecnu.traceability.judge.JudgeActivity;
+import com.ecnu.traceability.judge.RiskCheckService;
+import com.ecnu.traceability.location.Dao.LocationEntity;
+import com.ecnu.traceability.location.Dao.LocationEntityDao;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 import com.ecnu.traceability.machine_learning.Learning;
+import com.ecnu.traceability.machine_learning.TrainModel;
 import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
 
 public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
@@ -172,11 +137,30 @@ public class HomepageActivity extends BaseActivity {
         oneNetDataSender = new InfoToOneNet(dbHelper);
         //判断服务是否运行
         boolean serviceFlag = GeneralUtils.isServiceRunning(getApplicationContext(), "com.ecnu.traceability.data_analyze.LocationAnalysisService");
-        if (!serviceFlag) {
-            Intent intent = new Intent(this, LocationAnalysisService.class);
-            bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
-        }
+//        if (!serviceFlag) {
+        Intent intent = new Intent(this, LocationAnalysisService.class);
+        bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+//        }
         learning = new Learning();
+
+        new Thread(() -> {
+            if (!TrainModel.locateToLoadModel.exists()) {
+                //初始化系统的模型
+                Learning learning = new Learning();
+                learning.downloadModel();
+            }
+            //判断数据库中是否为空
+            Long count = dbHelper.getSession().getTransportationEntityDao().count();
+            Log.i(TAG, "乘坐交通工具：" + count);
+            if (count == 0) {
+                Transportation transInfo = new Transportation(dbHelper);
+                EPayment paymentInfo = new EPayment(dbHelper);
+                transInfo.addTransportationInfo();
+                paymentInfo.addEPaymentInfo();
+            }
+        }).start();
+
+
     }
 
 

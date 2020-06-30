@@ -23,6 +23,7 @@ import com.amap.api.services.geocoder.GeocodeResult;
 import com.amap.api.services.geocoder.GeocodeSearch;
 import com.amap.api.services.geocoder.RegeocodeResult;
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.NotificationUtil;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.model.User;
 
@@ -159,6 +160,8 @@ public class FencesService extends Service implements GeocodeSearch.OnGeocodeSea
                         Log.i(TAG, "从内部出去");
                         editor.putInt("FENCE_STATUS_", GeoFence.STATUS_OUT);
                         editor.apply();
+                        NotificationUtil.notification(getApplicationContext(), "走出隔离区警告", "你已经走出隔离区，将对您的活动轨迹实时监控",2);
+
                         break;
                     case GeoFence.STATUS_STAYED:
                         Log.i(TAG, "在内部停留超过十分钟");

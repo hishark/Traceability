@@ -182,6 +182,11 @@ public class GPSJudgement {
         bundle.putSerializable("gpsJudge", (Serializable) list);
         bundle.putDouble("avgDistance", avgDistance);
         bundle.putDouble("gpsTime", gpsTime);
+        new Thread(() -> {
+            for (PointDistance data : disList) {
+                addRiskToDB(data.entity1);//将与病人GPS位置接触的风险信息保存到数据库持久化
+            }
+        }).start();
         return bundle;
 
     }

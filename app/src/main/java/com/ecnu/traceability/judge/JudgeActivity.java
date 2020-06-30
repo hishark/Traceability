@@ -123,10 +123,10 @@ public class JudgeActivity extends BaseActivity {
 
         //判断服务是否运行
         boolean serviceFlag = GeneralUtils.isServiceRunning(getApplicationContext(), "com.ecnu.traceability.data_analyze.LocationAnalysisService");
-        if (!serviceFlag) {
-            Intent intent = new Intent(this, LocationAnalysisService.class);
-            bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
-        }
+//        if (!serviceFlag) {
+        Intent intent = new Intent(this, LocationAnalysisService.class);
+        bindService(intent, mMessengerConnection, BIND_AUTO_CREATE);
+//        }
 
         //初始化风险项目列表
         meetMacList = new ArrayList<>();
@@ -290,7 +290,7 @@ public class JudgeActivity extends BaseActivity {
         updateUI(risk);
         if (risk > 0) {
             //显示通知
-            NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离");
+            NotificationUtil.notification(getApplicationContext(), "风险警告", "你已经接触病毒患者，请进行自我隔离", 1);
         }
 //        double tempRisk = macRisks.size() * 3 + transRisks.size() * 2 + gpsRisks.size();
 //        if (tempRisk > risk) {//如果已保存的风险高于当前从服务器接收的则使用历史风险
@@ -365,7 +365,7 @@ public class JudgeActivity extends BaseActivity {
                 });
                 if (result > 0) {
                     //显示通知
-                    NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离");
+                    NotificationUtil.notification(getApplicationContext(), "风险警告", "你已经接触病毒患者，请进行自我隔离", 1);
                 }
                 Log.e("federated learning", "推断结果是" + result);
 
@@ -409,7 +409,7 @@ public class JudgeActivity extends BaseActivity {
         DeviceAdapter deviceAdapter = new DeviceAdapter(getApplicationContext(), meetMacList);
         listViewCloseDevice.setAdapter(deviceAdapter);
 
-        TimeAdapter timeAdapter = new TimeAdapter(getApplicationContext(), meetTimeList);
+        TimeAdapter timeAdapter = new TimeAdapter(JudgeActivity.this, meetTimeList);
         listViewCloseTime.setAdapter(timeAdapter);
 
         TransAdapter transAdapter = new TransAdapter(getApplicationContext(), transList);

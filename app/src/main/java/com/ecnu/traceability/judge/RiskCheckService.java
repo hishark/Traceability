@@ -74,10 +74,10 @@ public class RiskCheckService extends Service {
                 //执行特定的任务
                 //初始化风险判断模块快
                 waitCount = 0;
-                judgeUtils = new Judge(getApplicationContext(), dbHelper);//查询风险
-                updateRiskInfo();
                 //下载模型，检查风险等级
                 if (flag) {//第一次启动时不下载
+                    judgeUtils = new Judge(getApplicationContext(), dbHelper);//查询风险
+                    updateRiskInfo();
                     Learning learning = new Learning();
                     learning.downloadModel();
                 }
@@ -152,7 +152,7 @@ public class RiskCheckService extends Service {
 
                 if (result > 0) {
                     //显示通知
-                    NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离");
+                    NotificationUtil.notification(this, "风险警告", "你已经接触病毒患者，请进行自我隔离",1);
                 }
                 Log.e("federated learning", "推断结果是" + result);
 

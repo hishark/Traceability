@@ -14,6 +14,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Vibrator;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -22,7 +23,7 @@ import com.ecnu.traceability.R;
 import com.ecnu.traceability.judge.JudgeActivity;
 
 public class NotificationUtil {
-//    private int id = 1;
+    //    private int id = 1;
     private Context context;
 
 //    public NotificationUtil(Context context){
@@ -31,12 +32,12 @@ public class NotificationUtil {
 
     /**
      * 出现风险时发出通知
+     *
      * @param context
-     * @param title 风险警告
-     * @param msg 存在风险，请检查
+     * @param title   风险警告
+     * @param msg     存在风险，请检查
      */
-    public static void notification(Context context, String title, String msg) {
-        int id = 1;
+    public static void notification(Context context, String title, String msg,int id) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // 创建
@@ -78,9 +79,14 @@ public class NotificationUtil {
      * 播放通知声音
      */
     private static void playNotificationRing(Context context) {
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Ringtone rt = RingtoneManager.getRingtone(context, uri);
-        rt.play();
+        try {
+            Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone rt = RingtoneManager.getRingtone(context, uri);
+            rt.play();
+        } catch (Exception e) {
+            Log.e("notification", e.toString());
+        }
+
     }
 
     /**
@@ -133,6 +139,7 @@ public class NotificationUtil {
 //        playNotificationVibrate(this);
 //    }
 }
+
 class NoticeCancelBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
