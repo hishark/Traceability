@@ -36,6 +36,7 @@ import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.machine_learning.LearningData;
 import com.ecnu.traceability.machine_learning.LearningDataDao;
 import com.ecnu.traceability.machine_learning.TrainModel;
+import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
@@ -461,6 +462,8 @@ public class JudgeActivity extends BaseActivity {
                 ////////////////////////////////////////////////////////向服务器发送
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
                 HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
+                String tel = getTel();
+                HTTPUtils.addTelephone(tel);//报告手机联系方式
             }
         }
     });
@@ -541,5 +544,13 @@ public class JudgeActivity extends BaseActivity {
 //                break;
         }
     }
-
+    private String getTel() {
+        List<User> users = dbHelper.getSession().getUserDao().loadAll();
+        if (null != users && users.size() > 0) {
+            User user = users.get(0);
+            return user.getTel();
+        } else {
+            return null;
+        }
+    }
 }

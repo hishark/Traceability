@@ -34,7 +34,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class HTTPUtils {
-    //private static final String IP = "132.232.144.76";
+    //    private static final String IP = "132.232.144.76";
     private static final String IP = "192.168.1.4";
     public static final String TAG = "HTTPUtils";
     private static OkHttpClient client = new OkHttpClient.Builder()

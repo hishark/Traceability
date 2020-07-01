@@ -133,8 +133,7 @@ public class HomepageActivity extends BaseActivity {
         //EPayment payment = new EPayment(dbHelper);
         //payment.addEPaymentInfo();
 
-        // 上传数据相关
-        oneNetDataSender = new InfoToOneNet(dbHelper);
+
         //判断服务是否运行
         boolean serviceFlag = GeneralUtils.isServiceRunning(getApplicationContext(), "com.ecnu.traceability.data_analyze.LocationAnalysisService");
 //        if (!serviceFlag) {
@@ -225,6 +224,8 @@ public class HomepageActivity extends BaseActivity {
             AlertDialog dialog = builder.setPositiveButton("是的，本人已确诊", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    // 上传数据相关
+                    oneNetDataSender = new InfoToOneNet(dbHelper);
                     Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
                     upload();
                 }
@@ -289,7 +290,15 @@ public class HomepageActivity extends BaseActivity {
             e.printStackTrace();
         }
     }
-
+    private String getTel() {
+        List<User> users = dbHelper.getSession().getUserDao().loadAll();
+        if (null != users && users.size() > 0) {
+            User user = users.get(0);
+            return user.getTel();
+        } else {
+            return null;
+        }
+    }
     //    ---------------------------------------------Messager回调函数开始-------------------------------------------------
     private static final int MSG_ID_CLIENT = 1;
     private static final int MSG_ID_SERVER = 2;
@@ -317,6 +326,8 @@ public class HomepageActivity extends BaseActivity {
                 ////////////////////////////////////////////////////////向服务器发送
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
                 HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
+                String tel = getTel();
+                HTTPUtils.addTelephone(tel);//报告手机联系方式
             }
         }
     });

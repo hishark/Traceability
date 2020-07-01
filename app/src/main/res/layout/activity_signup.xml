@@ -33,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 app:helperText="查找方式：设置->关于手机->状态信息->蓝牙地址"
-                app:passwordToggleEnabled="true">
+                app:passwordToggleEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/user_bluetooth_mac_address"
@@ -52,7 +52,7 @@
                 android:layout_marginTop="20dp"
                 android:gravity="center"
                 app:helperText="请准确输入您的个人手机号"
-                app:passwordToggleEnabled="true">
+                app:passwordToggleEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/user_phone"
@@ -72,7 +72,7 @@
                 android:layout_marginTop="20dp"
                 android:gravity="center"
                 app:helperText="请具体到门牌号"
-                app:passwordToggleEnabled="true">
+                app:passwordToggleEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/user_address"

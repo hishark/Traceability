@@ -81,7 +81,7 @@ public class RiskReportingService extends Service {
                 int RISK_LEVEL = sharedPreferences.getInt("RISK_LEVEL", 0);
                 Log.e("telephone", String.valueOf(RISK_LEVEL));
                 // 风险等级为3 - 高风险
-                if (RISK_LEVEL == 3) {
+                if (RISK_LEVEL == 2) {
                     // 从SIM卡获取手机号
                     //getCurPhoneNum();
                     // 向服务器发送自己的手机号
