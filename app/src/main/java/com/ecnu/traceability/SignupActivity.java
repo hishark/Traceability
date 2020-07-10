@@ -17,9 +17,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.NotificationsPermissionUtil;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.bluetooth.service.MacAddress;
+import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.User;
 
 import static com.amap.api.maps.model.BitmapDescriptorFactory.getContext;
@@ -82,7 +84,9 @@ public class SignupActivity extends BaseActivity {
             User user = new User(mac, tel, address);
             dbHelper.getSession().getUserDao().insert(user);
 
-            OneNetDeviceUtils.getDevices(getContext(), dbHelper);
+            //OneNetDeviceUtils.getDevices(getContext(), dbHelper);
+            LocalDevice device=new LocalDevice(mac,"");
+            HTTPUtils.addUser(device,dbHelper);
             startActivity(HomepageActivity.class);
 
         }

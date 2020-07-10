@@ -140,7 +140,7 @@ public class MainActivity extends BaseActivity {
 
         Log.e(TAG, "------------------------service start---------------------");
 
-        OneNetDeviceUtils.getDevices(getApplicationContext(),dbHelper);
+        //OneNetDeviceUtils.getDevices(getApplicationContext(),dbHelper);
 
 //        oneNetDataSender = new InfoToOneNet(dbHelper);
 //        Intent intent = new Intent(this, LocationAnalysisService.class);

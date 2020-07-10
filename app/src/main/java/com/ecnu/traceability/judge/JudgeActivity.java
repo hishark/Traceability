@@ -25,6 +25,7 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.NotificationUtil;
+import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisService;
 import com.ecnu.traceability.ePayment.EPayment;
 import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
@@ -156,6 +157,7 @@ public class JudgeActivity extends BaseActivity {
 //        transList.add(new TransportationEntity("火车", "G247", 12, new Date()));
 
         // 计算当前设备的风险等级并更新UI
+        Log.i("show risk", "the risk is"+risk);
         updateRiskUI();
         updateUI(0);
         updateRiskInfo();
@@ -390,6 +392,7 @@ public class JudgeActivity extends BaseActivity {
         SharedPreferences.Editor editor = getSharedPreferences("risk_data", MODE_PRIVATE).edit();
         editor.putInt("RISK_LEVEL", RISK_LEVEL);
         editor.apply();
+        Log.i("log risk", "risk is"+RISK_LEVEL);
         fence(RISK_LEVEL);
         // 只要不是无风险，就显示【上传数据按钮】
         if (RISK_LEVEL != 0) {
@@ -453,17 +456,22 @@ public class JudgeActivity extends BaseActivity {
                 //信息发送部分
                 ////////////////////////////////////////////////////////向OneNet发送
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
-                oneNetDataSender.pushLocationMapData(locationMap);//向OneNet发送地点（地图）统计信息
+                //oneNetDataSender.pushLocationMapData(locationMap);
+                HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
+                HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
+
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet地点统计（饼图）发送信息
+                //oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet发送地点（地图）统计信息
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
                         .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
+                //oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
                 ////////////////////////////////////////////////////////向服务器发送
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
                 HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
                 String tel = getTel();
                 HTTPUtils.addTelephone(tel);//报告手机联系方式
+                List<BluetoothDeviceEntity> macList=dbHelper.getSession().getBluetoothDeviceEntityDao().loadAll();
+                HTTPUtils.addAllRelationshipList(macList,1,true);
             }
         }
     });

@@ -15,11 +15,14 @@ import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.model.LatLonPoint;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class ILocationService extends Service {
 
@@ -30,7 +33,7 @@ public class ILocationService extends Service {
     //声明AMapLocationClientOption对象
     public AMapLocationClientOption mLocationOption = null;
 
-    private long count=0;
+    private long count = 0;
     private InfoToOneNet oneNetSender;
 
     //声明定位回调监听器
@@ -38,20 +41,28 @@ public class ILocationService extends Service {
         @Override
         public void onLocationChanged(AMapLocation aMapLocation) {
             //获取定位时间
-            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Date date = new Date(aMapLocation.getTime());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+            String datetime = sdf.format(new Date());
+            Date date = new Date();
+            try {
+                date = sdf.parse(datetime);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             LocationEntity entity = new LocationEntity(aMapLocation.getLatitude(), aMapLocation.getLongitude(), date);
             dbHelper.getSession().getLocationEntityDao().insert(entity);
             Log.e(TAG, "------------------------add to database---------------------");
-            if(count%5==0){
+            if (count % 5 == 0) {
                 //查询当前的风险等级，如果风险等级为高，主动实时向OneNET
                 SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
                 int fenceStatus = sharedPreferences.getInt("FENCE_STATUS_", 4);
-                Log.i(TAG, "==========++===="+String.valueOf(fenceStatus)+"==========++====");
-                if(fenceStatus== GeoFence.STATUS_OUT){
+                Log.i(TAG, "地理围栏状态是：" + String.valueOf(fenceStatus));
+                if (fenceStatus == GeoFence.STATUS_OUT) {
                     Log.i(TAG, "向oneNET发送位置信息");
                     //实时向oneNET发送位置
-                    oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()),date);
+                    HTTPUtils.pushRealtimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
+                    //oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
                 }
             }
             count++;
@@ -65,7 +76,7 @@ public class ILocationService extends Service {
         super.onCreate();
         dbHelper.init(this);
         startPreciseLocation();
-        oneNetSender=new InfoToOneNet(dbHelper);
+        oneNetSender = new InfoToOneNet(dbHelper);
     }
 
     public void startPreciseLocation() {

@@ -6,7 +6,11 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Transient;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
+
 import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
@@ -26,6 +30,16 @@ public class BluetoothDeviceEntity {
         this.deviceInfo = deviceInfo;
         this.macAddress=deviceInfo.getAddress();
         this.deviceName=deviceInfo.getName();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+        String datetime = sdf.format(new Date());
+        Date date = new Date();
+        try {
+            date = sdf.parse(datetime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        this.date=date;
     }
 
     public BluetoothDeviceEntity(String macAddress, String deviceName, Date date) {

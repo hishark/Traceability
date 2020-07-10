@@ -88,16 +88,16 @@ public class TransportationJudge {
         return bundle;
     }
 
-    public List<TransportationEntity> parseDateFormServer(Response response) {
+    public Bundle parseDateFormServer(Response response) {
         List<TransportationEntity> serverDataList = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-
+        String mac="";
         try {
             String body = response.body().string();
             Log.e("TransportationEntity", body);
             JSONArray array = new JSONArray(body);
-
+            mac=array.getJSONObject(0).getString("macaddress");
             for (int i = 0; i < array.length(); i++) {
                 JSONObject jsonObject = array.getJSONObject(i);
                 String type = jsonObject.getString("type");
@@ -111,6 +111,9 @@ public class TransportationJudge {
         } catch (JSONException | ParseException | IOException e) {
             e.printStackTrace();
         }
-        return serverDataList;
+        Bundle bundle=new Bundle();
+        bundle.putSerializable("serverDataList", (Serializable) serverDataList);
+        bundle.putString("mac",mac);
+        return bundle;
     }
 }

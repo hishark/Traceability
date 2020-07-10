@@ -215,16 +215,16 @@ public class GPSJudgement {
     //    }
 
     //解析服务端发送来的数据
-    public List<LocationEntity> parseDate(Response response) {
+    public Bundle parseDate(Response response) {
         List<LocationEntity> serverDataList = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+        String mac = "";
 
         try {
             String body = response.body().string();
             Log.e("parseDate Location", body);
             JSONArray array = new JSONArray(body);
-
+            mac = array.getJSONObject(0).getString("macaddress");
             for (int i = 0; i < array.length(); i++) {
                 JSONObject jsonObject = array.getJSONObject(i);
                 Double latitude = jsonObject.getDouble("latitude");
@@ -238,7 +238,10 @@ public class GPSJudgement {
             e.printStackTrace();
         }
         Log.i(TAG, "parseDate++++++++++++++++++++");
-        return serverDataList;
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("serverDataList", (Serializable) serverDataList);
+        bundle.putString("mac", mac);
+        return bundle;
     }
 
 

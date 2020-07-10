@@ -83,7 +83,7 @@ public class OneNetDeviceUtils {
                                 LocalDevice device = new LocalDevice(mac, deviceId);
                                 dbHelper.getSession().getLocalDeviceDao().insert(device);
                                 //成功
-                                HTTPUtils.addUser(device);
+                                HTTPUtils.addUser(device,dbHelper);
 
                                 Log.e("OneNetDeviceUtils", deviceId);
                                 //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}

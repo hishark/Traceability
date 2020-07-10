@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
+import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.machine_learning.Learning;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
@@ -16,6 +17,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import okhttp3.Call;
@@ -81,7 +83,7 @@ public class Judge {
                 sameTransportationList = new ArrayList<>();
 
                 patientMacList = new ArrayList<String>();
-                ArrayList<String> tempMacList=new ArrayList<String>();
+                ArrayList<String> tempMacList = new ArrayList<String>();
 
                 String responseBody = response.body().string();
                 Log.i("getPatientMacAddress", "============" + responseBody + "============");
@@ -108,20 +110,20 @@ public class Judge {
                     Log.i("judge ", "-----------------------------start judge-------------------------");
 
                     gpsJudgement.queryPatientLocationInfo(patientMac, locationCallback);
-                    synchronized (this){
+                    synchronized (this) {
                         requestCount++;
                     }
                     transportationJudgement.queryPatientTransportationinfo(patientMac, transportationCallback);
-                    synchronized (this){
+                    synchronized (this) {
                         requestCount++;
                     }
-                    Bundle bundle=macAddressJudgement.judge(macAddressJudgement.getDataFromDatabase(patientMac));
+                    Bundle bundle = macAddressJudgement.judge(macAddressJudgement.getDataFromDatabase(patientMac));
 
-                    avgStrength=bundle.getDouble("avgStrength",0);//联邦学习数据
-                    bluetoothTime+=bundle.getDouble("bluetoothTime",bluetoothTime);//联邦学习数据
+                    avgStrength = bundle.getDouble("avgStrength", 0);//联邦学习数据
+                    bluetoothTime += bundle.getDouble("bluetoothTime", bluetoothTime);//联邦学习数据
 
-                    risk += bundle.getInt("count",0);
-                    if(bundle.getInt("count",0)>0){
+                    risk += bundle.getInt("count", 0);
+                    if (bundle.getInt("count", 0) > 0) {
                         patientMacList.add(patientMac);
                     }
                     Log.i("mac risk", String.valueOf(risk));
@@ -145,15 +147,17 @@ public class Judge {
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             //Log.i("==========", "gps response1");
-            List<LocationEntity> serverDataList = gpsJudgement.parseDate(response);
+            Bundle parsedDate = gpsJudgement.parseDate(response);
+            List<LocationEntity> serverDataList = (List<LocationEntity>) parsedDate.getSerializable("serverDataList");
+            String mac = parsedDate.getString("mac");
             //Log.i("==========", "gps response2");
 
             Bundle bundle = gpsJudgement.judge(serverDataList, localLocationData);
             List<LocationEntity> tempList = (List<LocationEntity>) bundle.get("gpsJudge");
             //Log.i("==========", "gps response3");
 
-            avgDistance=bundle.getDouble("avgDistance",0);//联邦学习数据
-            gpsTime+=bundle.getDouble("gpsTime",0);//联邦学习数据
+            avgDistance = bundle.getDouble("avgDistance", 0);//联邦学习数据
+            gpsTime += bundle.getDouble("gpsTime", 0);//联邦学习数据
             //Log.i("==========", "gps response4");
 
             risk += tempList.size();
@@ -161,12 +165,18 @@ public class Judge {
             //requestCount--;
             //Log.i("==========", "gps response5");
 
-            synchronized (this){
+            synchronized (this) {
                 requestCount--;
             }
             //Log.e("+++++++", "1计数值："+String.valueOf(requestCount));
 
             Log.i("gps risk", String.valueOf(risk));
+            if (tempList.size() > 0) {
+                List<BluetoothDeviceEntity> macList = new ArrayList<>();
+                macList.add(new BluetoothDeviceEntity(mac, "", new Date()));
+                HTTPUtils.addAllRelationshipList(macList, 1, false);
+
+            }
         }
     };
     //////////////////////调用风险判别//////////////////////
@@ -178,22 +188,31 @@ public class Judge {
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            List<TransportationEntity> serverDataList = transportationJudgement.parseDateFormServer(response);
+            Bundle parsedData = transportationJudgement.parseDateFormServer(response);
+
+            List<TransportationEntity> serverDataList = (List<TransportationEntity>) parsedData.getSerializable("serverDataList");
+            String mac = parsedData.getString("mac");
 //            sameTransportationList = transportationJudgement.judge(serverDataList, localTransportationData);
-            Bundle bundle= transportationJudgement.judge(serverDataList, localTransportationData);
-            List<TransportationEntity> tempList= (List<TransportationEntity>) bundle.getSerializable("sameList");
+            Bundle bundle = transportationJudgement.judge(serverDataList, localTransportationData);
+            List<TransportationEntity> tempList = (List<TransportationEntity>) bundle.getSerializable("sameList");
 
-            transCount+=bundle.getDouble("transCount",0);//联邦学习数据
-            avgSeatDiff=bundle.getDouble("avgSeatDiff",0);//联邦学习数据
+            transCount += bundle.getDouble("transCount", 0);//联邦学习数据
+            avgSeatDiff = bundle.getDouble("avgSeatDiff", 0);//联邦学习数据
 
-            risk += tempList.size() * 2;
+//            risk += tempList.size() * 2;
+            risk += tempList.size();
             sameTransportationList.addAll(tempList);//增量式添加所有与所有接触者接触信息
             Log.i("transportation risk", String.valueOf(risk));
             //Log.e("=======", "2计数值："+String.valueOf(requestCount));
-            synchronized (this){
+            synchronized (this) {
                 requestCount--;
             }
             //requestCount--;
+            if (tempList.size() > 0) {
+                List<BluetoothDeviceEntity> macList = new ArrayList<>();
+                macList.add(new BluetoothDeviceEntity(mac, "", new Date()));
+                HTTPUtils.addAllRelationshipList(macList, 1, false);
+            }
         }
     };
 
@@ -245,26 +264,26 @@ public class Judge {
     }
 
 
-    public Bundle judgeFormHistory(){
+    public Bundle judgeFormHistory() {
 
-        List<MacRisk> macRisks=dbHelper.getSession().getMacRiskDao().loadAll();
-        List<TransRisk> transRisks=dbHelper.getSession().getTransRiskDao().loadAll();
-        List<GPSRisk> gpsRisks=dbHelper.getSession().getGPSRiskDao().loadAll();
-        Bundle bundle=new Bundle();
+        List<MacRisk> macRisks = dbHelper.getSession().getMacRiskDao().loadAll();
+        List<TransRisk> transRisks = dbHelper.getSession().getTransRiskDao().loadAll();
+        List<GPSRisk> gpsRisks = dbHelper.getSession().getGPSRiskDao().loadAll();
+        Bundle bundle = new Bundle();
         bundle.putSerializable("macRisks", (Serializable) macRisks);
         bundle.putSerializable("transRisks", (Serializable) transRisks);
         bundle.putSerializable("gpsRisks", (Serializable) gpsRisks);
         return bundle;
     }
 
-    public Bundle getDateForFederatedLearnging(){
-        Bundle bundle=new Bundle();
-        bundle.putDouble("avgStrength",avgStrength);
-        bundle.putDouble("bluetoothTime",bluetoothTime);
-        bundle.putDouble("transCount",transCount);
-        bundle.putDouble("avgSeatDiff",avgSeatDiff);
-        bundle.putDouble("avgDistance",avgDistance);
-        bundle.putDouble("gpsTime",gpsTime);
+    public Bundle getDateForFederatedLearnging() {
+        Bundle bundle = new Bundle();
+        bundle.putDouble("avgStrength", avgStrength);
+        bundle.putDouble("bluetoothTime", bluetoothTime);
+        bundle.putDouble("transCount", transCount);
+        bundle.putDouble("avgSeatDiff", avgSeatDiff);
+        bundle.putDouble("avgDistance", avgDistance);
+        bundle.putDouble("gpsTime", gpsTime);
         return bundle;
     }
 }
