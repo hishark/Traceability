@@ -111,6 +111,11 @@ dependencies {
 
     implementation 'org.slf4j:slf4j-simple:1.6.1'
 
+
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+
+    compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+
 //This corrects for a junit version conflict.
     configurations.all {
         resolutionStrategy.force 'junit:junit:4.12'

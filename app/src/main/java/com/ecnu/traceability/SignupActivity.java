@@ -86,9 +86,10 @@ public class SignupActivity extends BaseActivity {
 
             //OneNetDeviceUtils.getDevices(getContext(), dbHelper);
             LocalDevice device=new LocalDevice(mac,"");
-            HTTPUtils.addUser(device,dbHelper);
-            startActivity(HomepageActivity.class);
-
+            OneNetDeviceUtils.addDevice(dbHelper,SignupActivity.this,device);
+            finish();
+            //HTTPUtils.addUser(device,dbHelper);
+            //startActivity(HomepageActivity.class);
         }
     };
     @Override

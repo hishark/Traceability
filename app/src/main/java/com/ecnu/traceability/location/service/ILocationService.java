@@ -16,6 +16,7 @@ import com.amap.api.location.AMapLocationListener;
 import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.HTTPUtils;
+import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.model.LatLonPoint;
 
@@ -61,6 +62,7 @@ public class ILocationService extends Service {
                 if (fenceStatus == GeoFence.STATUS_OUT) {
                     Log.i(TAG, "向oneNET发送位置信息");
                     //实时向oneNET发送位置
+                    oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
                     HTTPUtils.pushRealtimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
                     //oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
                 }

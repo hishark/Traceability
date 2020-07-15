@@ -44,7 +44,6 @@ public class OneNetDeviceUtils {
     }
 
     public static boolean isExistsDevice(DBHelper dbHelper, String mac) {
-        Log.e("mac", mac);
         List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
         if (deviceList.size() == 0) {
             return false;
@@ -53,108 +52,178 @@ public class OneNetDeviceUtils {
         }
     }
 
-    public static void addDevice(DBHelper dbHelper, Context context) {
+    //    public static void addDevice(DBHelper dbHelper, Context context) {
+//        JSONObject requestContent = new JSONObject();
+////        String mac = MacAddress.getBluetoothMAC(context);
+//        String mac =initMacAddress(dbHelper);
+//        macAddress = mac;
+//        if (null != mac) {
+//            //List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
+//            if (!isExistsDevice(dbHelper, mac)) {//该用户的本地数据库中无记录
+//                try {
+//                    //设备名mac地址
+//                    requestContent.putOpt("title", mac);
+//                    //协议
+//                    requestContent.putOpt("protocol", "HTTP");
+//                    //数据保密性
+//                    requestContent.putOpt("private", false);
+//                    //鉴权信息
+//                    requestContent.putOpt("auth_info", mac);
+//
+//                    OneNetApi.addDevice(requestContent.toString(), new OneNetApiCallback() {
+//                        @Override
+//                        public void onSuccess(String response) {
+//                            JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
+//                            int errno = resp.get("errno").getAsInt();
+//
+//                            if (0 == errno) {
+//                                JsonObject jsobj = (JsonObject) resp.get("data");
+//                                String deviceId = jsobj.get("device_id").toString().replaceAll("\"", "");
+//                                LocalDevice device = new LocalDevice(mac, deviceId);
+//                                dbHelper.getSession().getLocalDeviceDao().insert(device);
+//                                //成功
+//                                HTTPUtils.addUser(device,dbHelper);
+//
+//                                Log.e("OneNetDeviceUtils", deviceId);
+//                                //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
+//                                Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
+//                            } else {
+//                                //未成功
+//                                Log.e("OneNetDeviceUtils", "+=============添加设备失败===========+");
+//                                String error = resp.get("error").getAsString();
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailed(Exception e) {
+//
+//                        }
+//                    });
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        } else {
+//            Log.e("Fatal err:", "mac 地址无法获取");
+//        }
+//    }
+    public static void addDevice(DBHelper dbHelper, Context context, LocalDevice device) {
         JSONObject requestContent = new JSONObject();
-//        String mac = MacAddress.getBluetoothMAC(context);
-        String mac =initMacAddress(dbHelper);
-        macAddress = mac;
-        if (null != mac) {
-            //List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().queryBuilder().where(LocalDeviceDao.Properties.Mac.eq(mac)).list();
-            if (!isExistsDevice(dbHelper, mac)) {//该用户的本地数据库中无记录
-                try {
-                    //设备名mac地址
-                    requestContent.putOpt("title", mac);
-                    //协议
-                    requestContent.putOpt("protocol", "HTTP");
-                    //数据保密性
-                    requestContent.putOpt("private", false);
-                    //鉴权信息
-                    requestContent.putOpt("auth_info", mac);
+        String mac = device.getMac();
+        try {
+            //设备名mac地址
+            requestContent.putOpt("title", mac);
+            //协议
+            requestContent.putOpt("protocol", "MQTT");
+            //数据保密性
+            requestContent.putOpt("private", false);
+            //鉴权信息
+            requestContent.putOpt("auth_info", mac);
 
-                    OneNetApi.addDevice(requestContent.toString(), new OneNetApiCallback() {
-                        @Override
-                        public void onSuccess(String response) {
-                            JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
-                            int errno = resp.get("errno").getAsInt();
+            OneNetApi.addDevice(requestContent.toString(), new OneNetApiCallback() {
+                @Override
+                public void onSuccess(String response) {
+                    JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
+                    int errno = resp.get("errno").getAsInt();
+                    Log.i(TAG, String.valueOf(resp.get("data")));
+                    if (0 == errno) {
+                        JsonObject jsobj = (JsonObject) resp.get("data");
+                        String deviceId = jsobj.get("device_id").toString().replaceAll("\"", "");
+                        device.setDeviceId(deviceId);
+                        dbHelper.getSession().getLocalDeviceDao().insert(device);
+                        //成功
+                        HTTPUtils.addUser(device, dbHelper);
 
-                            if (0 == errno) {
-                                JsonObject jsobj = (JsonObject) resp.get("data");
-                                String deviceId = jsobj.get("device_id").toString().replaceAll("\"", "");
-                                LocalDevice device = new LocalDevice(mac, deviceId);
-                                dbHelper.getSession().getLocalDeviceDao().insert(device);
-                                //成功
-                                HTTPUtils.addUser(device,dbHelper);
-
-                                Log.e("OneNetDeviceUtils", deviceId);
-                                //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
-                                Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
-                            } else {
-                                //未成功
-                                Log.e("OneNetDeviceUtils", "+=============添加设备失败===========+");
-                                String error = resp.get("error").getAsString();
+                        Log.e("OneNetDeviceUtils", deviceId);
+                        //{"errno":0,"data":{"device_id":"602595381"},"error":"succ"}
+                        Log.e("OneNetDeviceUtils", "+=============成功添加设备===========+");
+                    } else {
+                        //未成功(设备已经存在)
+                        Map<String, String> urlParams = new HashMap<>();
+                        urlParams.put("auth_info", mac);
+                        OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {//根据auto_info 查询当前设备的设备号
+                            @Override
+                            public void onSuccess(String response) {
+                                JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
+                                int errno = resp.get("errno").getAsInt();
+                                if (0 == errno) {
+                                    parseData(resp.get("data").getAsJsonObject(), context, dbHelper, device);
+                                } else {
+                                    String error = resp.get("error").getAsString();
+                                    Log.e(TAG, error);
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onFailed(Exception e) {
-
-                        }
-                    });
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                            @Override
+                            public void onFailed(Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        Log.e("OneNetDeviceUtils", "+=============添加设备失败===========+");
+                        String error = resp.get("error").getAsString();
+                        Log.e(TAG, error );
+                    }
                 }
-            }
-        } else {
-            Log.e("Fatal err:", "mac 地址无法获取");
+
+                @Override
+                public void onFailed(Exception e) {
+
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+//            }
+//        } else {
+//            Log.e("Fatal err:", "mac 地址无法获取");
+//        }
     }
 
-    public static void getDevices(Context context, DBHelper dbHelper) {
-//        String mac = MacAddress.getBluetoothMAC(context);
-        String mac =initMacAddress(dbHelper);
-        macAddress = mac;
-        Map<String, String> urlParams = new HashMap<>();
-        OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {
-            @Override
-            public void onSuccess(String response) {
-                JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
-                int errno = resp.get("errno").getAsInt();
-                if (0 == errno) {
-                    parseData(resp.get("data").getAsJsonObject(), context, dbHelper, mac);
-                } else {
-                    addDevice(dbHelper, context);
-                    String error = resp.get("error").getAsString();
-                    //Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
-                }
-            }
+//    public static void getDevices(Context context, DBHelper dbHelper) {
+////        String mac = MacAddress.getBluetoothMAC(context);
+//        String mac = initMacAddress(dbHelper);
+//        macAddress = mac;
+//        Map<String, String> urlParams = new HashMap<>();
+//        urlParams.put("auth_info", mac);
+//        OneNetApi.fuzzyQueryDevices(urlParams, new OneNetApiCallback() {
+//            @Override
+//            public void onSuccess(String response) {
+//                JsonObject resp = new JsonParser().parse(response).getAsJsonObject();
+//                int errno = resp.get("errno").getAsInt();
+//                if (0 == errno) {
+//                    parseData(resp.get("data").getAsJsonObject(), context, dbHelper, mac);
+//                } else {
+//                    addDevice(dbHelper, context);
+//                    String error = resp.get("error").getAsString();
+//                    //Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailed(Exception e) {
+//                e.printStackTrace();
+//            }
+//        });
+//    }
 
-            @Override
-            public void onFailed(Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private static void parseData(JsonObject data, Context context, DBHelper dbHelper, String mac) {
+    private static void parseData(JsonObject data, Context context, DBHelper dbHelper, LocalDevice device) {
         if (null == data) {
             return;
         }
-        boolean flag = false;
+        String mac = device.getMac();
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DeviceItem.class, new DeviceItemDeserializer());
         Gson gson = gsonBuilder.create();
         JsonArray jsonArray = data.get("devices").getAsJsonArray();
         Log.e("data", String.valueOf(data.get("devices")));
+
         for (JsonElement element : jsonArray) {
-            DeviceItem device = gson.fromJson(element, DeviceItem.class);
-            if (device.getTitle().equals(mac) && !isExistsDevice(dbHelper, mac)) {
-                LocalDevice locDevice = new LocalDevice(mac, device.getId());
-                dbHelper.getSession().getLocalDeviceDao().insert(locDevice);
-                flag = true;
+            DeviceItem tempDevice = gson.fromJson(element, DeviceItem.class);
+            if (tempDevice.getTitle().equals(mac) && !isExistsDevice(dbHelper, mac)) {
+                device.setDeviceId(tempDevice.getId());
+                dbHelper.getSession().getLocalDeviceDao().insert(device);
+                Log.i(TAG, "添加设备成功！");
             }
-        }
-        if (!flag) {
-            addDevice(dbHelper, context);
         }
     }
 
@@ -172,6 +241,7 @@ public class OneNetDeviceUtils {
             @Override
             public void onFailed(Exception e) {
                 e.printStackTrace();
+                Log.e(TAG, e.toString());
                 Log.e(TAG, "=============信息发送失败=============");
             }
         });

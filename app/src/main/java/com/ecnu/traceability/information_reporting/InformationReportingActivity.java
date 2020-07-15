@@ -190,7 +190,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
                 }
                 ////////////////////////////////////////////////////////
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
-                oneNetDataSender.pushLocationMapData(locationMap);//向OneNet发送地点（地图）统计信息
+                oneNetDataSender.sendPieChartData(locationMap);//向OneNet发送地点（地图）统计信息
                 ////////////////////////////////////////////////////////
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
                 oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet地点统计（饼图）发送信息
@@ -198,7 +198,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
 
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
                         .orderAsc(ReportInfoEntityDao.Properties.Date).list();
-                oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
+                oneNetDataSender.sendReportInfoToOneNet(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
                 ////////////////////////////////////////////////////////
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
 

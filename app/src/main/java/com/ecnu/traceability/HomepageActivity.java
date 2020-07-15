@@ -29,7 +29,6 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
-import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
@@ -55,16 +54,6 @@ import com.ecnu.traceability.transportation.Transportation;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import okio.ByteString;
 
 public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
@@ -140,6 +129,9 @@ public class HomepageActivity extends BaseActivity {
         Log.e(TAG, "------------------------service start---------------------");
 
         OneNetDeviceUtils.initMacAddress(dbHelper);
+        // oneNetDataSender = new InfoToOneNet(dbHelper);
+
+        //OneNetDeviceUtils.addDevice(dbHelper,HomepageActivity.this);
         SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
         int fenceStatus = sharedPreferences.getInt("FENCE_STATUS_", 4);
         if (fenceStatus == 4) {//值为空或者原本就是4
@@ -181,6 +173,22 @@ public class HomepageActivity extends BaseActivity {
         }).start();
 
         HTTPUtils.websocketConnect();
+
+        MqttUtil mqttUtil = MqttUtil.getInstance();
+        mqttUtil.initMqtt(HomepageActivity.this,dbHelper);
+        mqttUtil.addListener(new MsgHandler() {
+            @Override
+            public void onMessage(String type, Object data) {
+                Log.i(TAG, "onMessage: ============");
+                Log.i(TAG, type);
+                Log.i(TAG, "onMessage: " + data.toString());
+            }
+
+            @Override
+            public void onEvent(int event) {
+
+            }
+        });
     }
 
 
@@ -246,7 +254,9 @@ public class HomepageActivity extends BaseActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     // 上传数据相关
-                    oneNetDataSender = new InfoToOneNet(dbHelper);
+                    if (null == oneNetDataSender) {
+                        oneNetDataSender = new InfoToOneNet(dbHelper);
+                    }
                     Toast.makeText(getApplicationContext(), "信息上传中...", Toast.LENGTH_LONG).show();
                     upload();
                 }
@@ -303,9 +313,9 @@ public class HomepageActivity extends BaseActivity {
         try {
             mServerMessenger.send(message);
 
-            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
-            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
-            learning.startLearning();
+//            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
+//            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
+//            learning.startLearning();
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -344,23 +354,26 @@ public class HomepageActivity extends BaseActivity {
                 //信息发送部分
                 ////////////////////////////////////////////////////////向OneNet发送
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
+                oneNetDataSender.sendPieChartData(locationMap);
                 //oneNetDataSender.pushLocationMapData(locationMap);
-                HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
-                HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
-
+                //HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
+                //HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-                //oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet发送地点（地图）统计信息
+                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet发送地点（地图）统计信息
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
                         .orderAsc(ReportInfoEntityDao.Properties.Date).list();
+                oneNetDataSender.sendReportInfoToOneNet(reportInfoList);
+                oneNetDataSender.pushBarChartData();
                 //oneNetDataSender.pushReportAndpersonCountData(reportInfoList);//向OneNet发送人数统计和主动上报的公告板信息（公告板和条形图）
                 ////////////////////////////////////////////////////////向服务器发送
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
-                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
-                String tel = getTel();
-                HTTPUtils.addTelephone(tel);//报告手机联系方式
+                oneNetDataSender.pushTransportData(transportationEntityList);
+                //HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
+                //String tel = getTel();
+                //HTTPUtils.addTelephone(tel);//报告手机联系方式
 
-                List<BluetoothDeviceEntity> macList = dbHelper.getSession().getBluetoothDeviceEntityDao().loadAll();
-                HTTPUtils.addAllRelationshipList(macList, 1, true);
+                //List<BluetoothDeviceEntity> macList = dbHelper.getSession().getBluetoothDeviceEntityDao().loadAll();
+                //HTTPUtils.addAllRelationshipList(macList, 1, true);
             }
         }
     });
