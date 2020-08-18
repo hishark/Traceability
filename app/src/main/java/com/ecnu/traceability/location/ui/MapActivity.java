@@ -89,7 +89,7 @@ public class MapActivity extends AppCompatActivity {
         List<LatLng> pathoptimizeList = mpathSmoothTool.pathOptimize(mOriginList);
         //绘制轨迹，移动地图显示
         if (mOriginList != null && mOriginList.size() > 0) {
-            mOriginPolyline = amap.addPolyline(new PolylineOptions().addAll(pathoptimizeList).color(Color.BLUE));
+            mOriginPolyline = amap.addPolyline(new PolylineOptions().addAll(pathoptimizeList).color(Color.argb(255, 60, 213, 0)));
             amap.moveCamera(CameraUpdateFactory.newLatLngBounds(getBounds(pathoptimizeList), 200));
         }
     }

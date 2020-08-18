@@ -22,11 +22,11 @@ public class Transportation {
     }
 
     public void addTransportationInfo() {
-        TransportationEntity entity1 = new TransportationEntity("car", "abccdada11", 2, new Date());
-        TransportationEntity entity2 = new TransportationEntity("bus", "abcca11", -1, new Date());
-        TransportationEntity entity3 = new TransportationEntity("train", "5033", 101, new Date());
-        TransportationEntity entity4 = new TransportationEntity("car", "abccdada11", 2, new Date());
-        TransportationEntity entity5 = new TransportationEntity("car", "abccdada11", 2, new Date());
+        TransportationEntity entity1 = new TransportationEntity("car", "苏EUK008", 2, new Date());
+        TransportationEntity entity2 = new TransportationEntity("bus", "苏EUK722", -1, new Date());
+        TransportationEntity entity3 = new TransportationEntity("train", "5033", 30, new Date());
+        TransportationEntity entity4 = new TransportationEntity("car", "苏EUK003", 2, new Date());
+        TransportationEntity entity5 = new TransportationEntity("car", "苏EUK001", 2, new Date());
         dbHelper.getSession().getTransportationEntityDao().insert(entity1);
         dbHelper.getSession().getTransportationEntityDao().insert(entity2);
         dbHelper.getSession().getTransportationEntityDao().insert(entity3);

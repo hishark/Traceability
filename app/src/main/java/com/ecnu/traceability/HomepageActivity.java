@@ -29,6 +29,7 @@ import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.Utils.HTTPUtils;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
+import com.ecnu.traceability.bluetooth.Dao.BluetoothDeviceEntity;
 import com.ecnu.traceability.bluetooth.service.IBluetoothService;
 import com.ecnu.traceability.data_analyze.BluetoothAnalysisActivity;
 import com.ecnu.traceability.data_analyze.LocationAnalysisActivity;
@@ -51,6 +52,8 @@ import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
+import com.ecnu.traceability.ui.PersonalCenterAcitvity;
+import com.ecnu.traceability.ui.UserReportActivity;
 
 import java.util.List;
 import java.util.Map;
@@ -67,7 +70,7 @@ public class HomepageActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homepage);
-        setTitle("疫情追踪");
+        setTitle("疫情防控告警与追溯");
 
         findViewById(R.id.cardview_track_map).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,6 +106,12 @@ public class HomepageActivity extends BaseActivity {
             }
         });
 
+        findViewById(R.id.cardview_person_center).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(PersonalCenterAcitvity.class);
+            }
+        });
 
         verifyStoragePermission(HomepageActivity.this);//内存读取权限检查
 
@@ -175,7 +184,7 @@ public class HomepageActivity extends BaseActivity {
         HTTPUtils.websocketConnect();
 
         MqttUtil mqttUtil = MqttUtil.getInstance();
-        mqttUtil.initMqtt(HomepageActivity.this,dbHelper);
+        mqttUtil.initMqtt(HomepageActivity.this, dbHelper);
         mqttUtil.addListener(new MsgHandler() {
             @Override
             public void onMessage(String type, Object data) {
@@ -247,7 +256,8 @@ public class HomepageActivity extends BaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.menu_upload) {
-            startActivity(InformationReportingActivity.class);
+//            startActivity(InformationReportingActivity.class);
+            startActivity(UserReportActivity.class);
         } else if (id == R.id.menu_warning) {
             AlertDialog.Builder builder = new AlertDialog.Builder(HomepageActivity.this);
             AlertDialog dialog = builder.setPositiveButton("是的，本人已确诊", new DialogInterface.OnClickListener() {
@@ -313,9 +323,9 @@ public class HomepageActivity extends BaseActivity {
         try {
             mServerMessenger.send(message);
 
-//            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
-//            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
-//            learning.startLearning();
+            learning.updateLearningData(true, dbHelper);//更新联邦学习数据
+            learning.propocessData(learning.getLearningDataFromDB(dbHelper));
+            learning.startLearning();
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -356,8 +366,8 @@ public class HomepageActivity extends BaseActivity {
                 Map<String, Integer> locationMap = (Map<String, Integer>) msg.getData().get(MSG_CONTENT);
                 oneNetDataSender.sendPieChartData(locationMap);
                 //oneNetDataSender.pushLocationMapData(locationMap);
-                //HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
-                //HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
+                HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
+                HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
                 oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet发送地点（地图）统计信息
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
@@ -368,12 +378,12 @@ public class HomepageActivity extends BaseActivity {
                 ////////////////////////////////////////////////////////向服务器发送
                 List<TransportationEntity> transportationEntityList = dbHelper.getSession().getTransportationEntityDao().queryBuilder().orderAsc(TransportationEntityDao.Properties.Date).list();
                 oneNetDataSender.pushTransportData(transportationEntityList);
-                //HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
-                //String tel = getTel();
-                //HTTPUtils.addTelephone(tel);//报告手机联系方式
+                HTTPUtils.uploadInfoToServer(locationList, reportInfoList, transportationEntityList);//向自己的服务器发送信息（所有信息）
+                String tel = getTel();
+                HTTPUtils.addTelephone(tel);//报告手机联系方式
 
-                //List<BluetoothDeviceEntity> macList = dbHelper.getSession().getBluetoothDeviceEntityDao().loadAll();
-                //HTTPUtils.addAllRelationshipList(macList, 1, true);
+                List<BluetoothDeviceEntity> macList = dbHelper.getSession().getBluetoothDeviceEntityDao().loadAll();
+                HTTPUtils.addAllRelationshipList(macList, 1, true);
             }
         }
     });

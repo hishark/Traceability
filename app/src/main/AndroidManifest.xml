@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- 内存读写权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:name=".SampleApplication"
         android:allowBackup="true"
@@ -65,10 +66,16 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_mapactivity"
             android:theme="@style/FullscreenTheme" />
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
         <activity android:name=".judge.JudgeActivity" />
         <activity android:name=".information_reporting.InformationReportingActivity" />
-        <activity android:name=".location.ui.SchooleFenceActivity"/>
+        <activity android:name=".location.ui.SchooleFenceActivity" />
+        <activity android:name=".transportation.TransportationInfoReport" />
+        <activity android:name=".ui.PersonalCenterAcitvity" />
+        <activity android:name=".ePayment.EPaymentReportActivity" />
+        <activity android:name=".ui.UserReportActivity"/>
+        <activity android:name=".ui.EPaymentReportActivity"/>
+        <activity android:name=".ui.PublicTransportationReportActivity"/>
 
         <service android:name="com.amap.api.location.APSService" /> <!-- 忘记添加服务的标签时不报错，但是不运行 -->
         <service
@@ -82,13 +89,14 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.mq.messenger.service" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
         <service android:name=".data_analyze.RiskReportingService" />
         <service android:name=".location.service.FencesService" />
         <service android:name=".judge.RiskCheckService" />
-        <service android:name="org.eclipse.paho.android.service.MqttService"/>
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
     </application>
 
 </manifest>

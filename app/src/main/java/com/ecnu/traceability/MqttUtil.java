@@ -68,7 +68,6 @@ public class MqttUtil {
                     flag=true;
                     connect();
                     Log.e("connect", "===============连接一次==============");
-                    Log.e("connect", "===============连接一次==============");
                     break;
                 }
                 try {
@@ -121,7 +120,7 @@ public class MqttUtil {
             if(null==mqttClient){
                 Log.e("mqtt", "错误");
             }
-            
+
             //订阅消息
             mqttClient.subscribe(topic, 0);
             DispachEvent(MQTT_SUBSCRIBED);
