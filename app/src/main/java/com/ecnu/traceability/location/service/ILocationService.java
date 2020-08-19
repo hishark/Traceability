@@ -51,23 +51,27 @@ public class ILocationService extends Service {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            LocationEntity entity = new LocationEntity(aMapLocation.getLatitude(), aMapLocation.getLongitude(), date);
-            dbHelper.getSession().getLocationEntityDao().insert(entity);
-            Log.e(TAG, "------------------------add to database---------------------");
-            if (count % 5 == 0) {
-                //查询当前的风险等级，如果风险等级为高，主动实时向OneNET
-                SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
-                int fenceStatus = sharedPreferences.getInt("FENCE_STATUS_", 4);
-                Log.i(TAG, "地理围栏状态是：" + String.valueOf(fenceStatus));
-                if (fenceStatus == GeoFence.STATUS_OUT) {
-                    Log.i(TAG, "向oneNET发送位置信息");
-                    //实时向oneNET发送位置
-                    oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
-                    HTTPUtils.pushRealtimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
-                    //oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
+
+            if(aMapLocation.getLatitude()!=0){
+                LocationEntity entity = new LocationEntity(aMapLocation.getLatitude(), aMapLocation.getLongitude(), date);
+                dbHelper.getSession().getLocationEntityDao().insert(entity);
+                Log.e(TAG, "------------------------add to database---------------------");
+                if (count % 5 == 0) {
+                    //查询当前的风险等级，如果风险等级为高，主动实时向OneNET
+                    SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
+                    int fenceStatus = sharedPreferences.getInt("FENCE_STATUS_", 4);
+                    Log.i(TAG, "地理围栏状态是：" + String.valueOf(fenceStatus));
+                    if (fenceStatus == GeoFence.STATUS_OUT) {
+                        Log.i(TAG, "向oneNET发送位置信息");
+                        //实时向oneNET发送位置
+                        oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
+                        HTTPUtils.pushRealtimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
+                        //oneNetSender.pushRealTimeLocation(new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude()), date);
+                    }
                 }
+                count++;
+
             }
-            count++;
 
         }
     };

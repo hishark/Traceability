@@ -11,6 +11,7 @@ import com.ecnu.traceability.information_reporting.Dao.ReportInfoEntity;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.model.LatLonPoint;
 import com.ecnu.traceability.model.LocalDevice;
+import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.google.gson.JsonObject;
 
@@ -33,12 +34,12 @@ public class InfoToOneNet {
 
     public InfoToOneNet(DBHelper dbHelper) {
         this.dbHelper = dbHelper;
-        List<LocalDevice> devices=dbHelper.getSession().getLocalDeviceDao().loadAll();
-        if(null!=devices&&devices.size()>0){
-            LocalDevice device=devices.get(0);
-            this.deviceId=device.getDeviceId();
-        }else{
-            this.deviceId="610475801";
+        List<LocalDevice> devices = dbHelper.getSession().getLocalDeviceDao().loadAll();
+        if (null != devices && devices.size() > 0) {
+            LocalDevice device = devices.get(0);
+            this.deviceId = device.getDeviceId();
+        } else {
+            this.deviceId = "610475801";
         }
         //this.deviceId="598587076";
     }
@@ -57,7 +58,7 @@ public class InfoToOneNet {
 
             JSONObject datapoint = new JSONObject();
             datapoint.putOpt("value", location);
-            JSONArray jsonArray=new JSONArray();
+            JSONArray jsonArray = new JSONArray();
             jsonArray.put(datapoint);
             JSONObject dsObject = new JSONObject();
             dsObject.putOpt("id", datastream);
@@ -74,26 +75,26 @@ public class InfoToOneNet {
 
     }
 
-    public void pushTransportData(List<TransportationEntity> transportationEntityList){
+    public void pushTransportData(List<TransportationEntity> transportationEntityList) {
         String datastream = "data_flow_for_transportation";
 
-        JSONArray datapoints=new JSONArray();
-        String mac=OneNetDeviceUtils.macAddress;
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        JSONArray datapoints = new JSONArray();
+        String mac = OneNetDeviceUtils.macAddress;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         try {
             for (TransportationEntity trans : transportationEntityList) {
-                JSONObject transObj=new JSONObject();
-                transObj.putOpt("mac",mac);
-                transObj.putOpt("type",trans.getType());
-                transObj.putOpt("no",trans.getNO());
-                transObj.putOpt("seat",trans.getSeat());
-                transObj.putOpt("date",sdf.format(trans.getDate()));
+                JSONObject transObj = new JSONObject();
+                transObj.putOpt("mac", mac);
+                transObj.putOpt("type", trans.getType());
+                transObj.putOpt("no", trans.getNO());
+                transObj.putOpt("seat", trans.getSeat());
+                transObj.putOpt("date", sdf.format(trans.getDate()));
                 JSONObject datapoint = new JSONObject();
                 datapoint.putOpt("value", transObj);
                 datapoints.put(datapoint);
             }
 
-            mqttUtil.publish("transportation",datapoints.toString());
+            mqttUtil.publish("transportation", datapoints.toString());
 
             JSONObject dsObject = new JSONObject();
             dsObject.putOpt("id", datastream);
@@ -109,10 +110,11 @@ public class InfoToOneNet {
             ex.printStackTrace();
         }
     }
-    public void pushBarChartData(){
+
+    public void pushBarChartData() {
         String datastream = "data_flow_for_bar_chart";
 
-        JSONArray datapoints=new JSONArray();
+        JSONArray datapoints = new JSONArray();
         BluetoothAnalysisUtil util = new BluetoothAnalysisUtil(dbHelper);
         Bundle bundle = util.processData();
         Integer[] ans = (Integer[]) bundle.get("countMap");
@@ -152,16 +154,16 @@ public class InfoToOneNet {
         try {
             for (LocationEntity latlon : locationList) {
                 JSONObject location = new JSONObject();
-                location.putOpt("mac",OneNetDeviceUtils.macAddress);
+                location.putOpt("mac", OneNetDeviceUtils.macAddress);
                 location.putOpt("lat", latlon.getLatitude());
                 location.putOpt("lon", latlon.getLongitude());
-                location.putOpt("date",sfd.format(latlon.getDate()));
+                location.putOpt("date", sfd.format(latlon.getDate()));
                 JSONObject datapoint = new JSONObject();
                 datapoint.putOpt("value", location);
                 datapoints.put(datapoint);
             }
 
-            mqttUtil.publish("location",datapoints.toString());
+            mqttUtil.publish("location", datapoints.toString());
 
             JSONObject dsObject = new JSONObject();
             dsObject.putOpt("id", datastream);
@@ -253,6 +255,40 @@ public class InfoToOneNet {
 
     }
 
+    public void sendIsOutFence(String state) {
+        String phone="";
+        List<User> users = dbHelper.getSession().getUserDao().loadAll();
+        if (null != users && users.size() > 0) {
+            User user = users.get(0);
+            phone=user.getTel();
+        }
+        String datastream = "is_out_of_fence";
+        JSONArray datapoints = new JSONArray();
+        try {
+            JSONObject states = new JSONObject();
+            states.putOpt("state", state);
+            states.putOpt("macAddress", OneNetDeviceUtils.macAddress);
+            states.putOpt("phone", phone);
+            JSONObject datapoint = new JSONObject();
+            datapoint.putOpt("value", states);
+            datapoints.put(datapoint);
+            JSONObject dsObject = new JSONObject();
+            dsObject.putOpt("id", datastream);
+            dsObject.putOpt("datapoints", datapoints);
+
+            JSONArray datastreams = new JSONArray();
+            datastreams.put(dsObject);
+
+            JSONObject request = new JSONObject();
+            request.putOpt("datastreams", datastreams);
+            OneNetDeviceUtils.sendData(deviceId, request);
+
+        } catch (
+                JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
 }

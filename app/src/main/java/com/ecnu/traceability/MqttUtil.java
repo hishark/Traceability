@@ -2,8 +2,10 @@ package com.ecnu.traceability;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.ecnu.traceability.Utils.DBHelper;
+import com.ecnu.traceability.Utils.GeneralUtils;
 import com.ecnu.traceability.model.LocalDevice;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -164,6 +166,7 @@ public class MqttUtil {
                 public void deliveryComplete(IMqttDeliveryToken token) {
                     //publish成功后调用
                     Log.v("mqtt","发送成功");
+                    GeneralUtils.showToastInService(mContext,"发送成功");
 
                 }
             };

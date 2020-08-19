@@ -47,7 +47,8 @@ import okio.ByteString;
 
 public class HTTPUtils {
     //    private static final String IP = "132.232.144.76";
-    private static final String IP = "192.168.1.10";
+//    private static final String IP = "192.168.1.10";
+    private static final String IP = "192.168.43.242";
     public static final String TAG = "HTTPUtils";
     private static OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(120, TimeUnit.SECONDS)//设置连接超时时间

@@ -22,6 +22,7 @@ import com.amap.api.services.geocoder.GeocodeQuery;
 import com.amap.api.services.geocoder.GeocodeResult;
 import com.amap.api.services.geocoder.GeocodeSearch;
 import com.amap.api.services.geocoder.RegeocodeResult;
+import com.ecnu.traceability.InfoToOneNet;
 import com.ecnu.traceability.Utils.DBHelper;
 import com.ecnu.traceability.Utils.NotificationUtil;
 import com.ecnu.traceability.Utils.OneNetDeviceUtils;
@@ -115,7 +116,7 @@ public class FencesService extends Service implements GeocodeSearch.OnGeocodeSea
         //设置中心点经度
         //centerPoint.setLongitude(116.123D);
         //执行添加围栏的操作
-        mGeoFenceClient.addGeoFence(centerPoint, 300f, "公司打卡");
+        mGeoFenceClient.addGeoFence(centerPoint, 300f, "疫情防控");
         mGeoFenceClient.setGeoFenceListener(fenceListenter);
         mGeoFenceClient.setActivateAction(GeoFenceClient.GEOFENCE_IN | GeoFenceClient.GEOFENCE_OUT | GeoFenceClient.GEOFENCE_STAYED);
         mGeoFenceClient.createPendingIntent(GEOFENCE_BROADCAST_ACTION);
@@ -136,6 +137,8 @@ public class FencesService extends Service implements GeocodeSearch.OnGeocodeSea
     };
 
     //定义接收广播的action字符串
+    private InfoToOneNet sender=new InfoToOneNet(dbHelper);
+
     public static final String GEOFENCE_BROADCAST_ACTION = "com.ecnu.traceability.location.service";
     private BroadcastReceiver mGeoFenceReceiver = new BroadcastReceiver() {
         @Override
@@ -155,13 +158,14 @@ public class FencesService extends Service implements GeocodeSearch.OnGeocodeSea
                         Log.i(TAG, "从外部进入");
                         editor.putInt("FENCE_STATUS_", GeoFence.STATUS_IN);
                         editor.apply();
+                        sender.sendIsOutFence("in");
                         break;
                     case GeoFence.STATUS_OUT:
                         Log.i(TAG, "从内部出去");
                         editor.putInt("FENCE_STATUS_", GeoFence.STATUS_OUT);
                         editor.apply();
                         NotificationUtil.notification(getApplicationContext(), "走出隔离区警告", "你已经走出隔离区，将对您的活动轨迹实时监控",2);
-
+                        sender.sendIsOutFence("out");
                         break;
                     case GeoFence.STATUS_STAYED:
                         Log.i(TAG, "在内部停留超过十分钟");

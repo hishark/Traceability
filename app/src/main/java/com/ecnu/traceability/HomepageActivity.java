@@ -55,6 +55,7 @@ import com.ecnu.traceability.transportation.Transportation;
 import com.ecnu.traceability.ui.PersonalCenterAcitvity;
 import com.ecnu.traceability.ui.UserReportActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -138,7 +139,8 @@ public class HomepageActivity extends BaseActivity {
         Log.e(TAG, "------------------------service start---------------------");
 
         OneNetDeviceUtils.initMacAddress(dbHelper);
-        // oneNetDataSender = new InfoToOneNet(dbHelper);
+//        oneNetDataSender = new InfoToOneNet(dbHelper);
+//        oneNetDataSender.sendIsOutFence("out");
 
         //OneNetDeviceUtils.addDevice(dbHelper,HomepageActivity.this);
         SharedPreferences sharedPreferences = getSharedPreferences("fence_status", MODE_PRIVATE);
@@ -181,16 +183,21 @@ public class HomepageActivity extends BaseActivity {
             }
         }).start();
 
-        HTTPUtils.websocketConnect();
+//        HTTPUtils.websocketConnect();
 
         MqttUtil mqttUtil = MqttUtil.getInstance();
         mqttUtil.initMqtt(HomepageActivity.this, dbHelper);
         mqttUtil.addListener(new MsgHandler() {
             @Override
             public void onMessage(String type, Object data) {
-                Log.i(TAG, "onMessage: ============");
-                Log.i(TAG, type);
-                Log.i(TAG, "onMessage: " + data.toString());
+//                String mac = OneNetDeviceUtils.macAddress;
+                if (data.toString().equals("隔离")) {
+                    GeneralUtils.showToastInService(HomepageActivity.this, "接收到隔离命令准备隔离");
+                } else {
+                    Log.i(TAG, "onMessage: ============");
+                    Log.i(TAG, type);
+                    Log.i(TAG, "onMessage: " + data.toString());
+                }
             }
 
             @Override
@@ -369,7 +376,15 @@ public class HomepageActivity extends BaseActivity {
                 HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
                 HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
-                oneNetDataSender.pushMapDateToOneNet(locationList);//向OneNet发送地点（地图）统计信息
+                List<LocationEntity> oneNetLocationList = new ArrayList<>();
+                if (locationList.size() > 100) {//多于100条数据进行精简
+                    for (int i = 0; i < locationList.size(); i += locationList.size() / 100) {
+                        if (locationList.get(i).getLongitude() != 0) {
+                            oneNetLocationList.add(locationList.get(i));
+                        }
+                    }
+                }
+                oneNetDataSender.pushMapDateToOneNet(oneNetLocationList);//向OneNet发送地点（地图）统计信息
                 List<ReportInfoEntity> reportInfoList = dbHelper.getSession().getReportInfoEntityDao().queryBuilder()
                         .orderAsc(ReportInfoEntityDao.Properties.Date).list();
                 oneNetDataSender.sendReportInfoToOneNet(reportInfoList);
