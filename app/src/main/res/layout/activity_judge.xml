@@ -22,7 +22,8 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="241dp"
+                android:layout_width="match_parent"
+                android:textAlignment="center"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="疫情风险等级查询"
@@ -30,11 +31,12 @@
                 android:textSize="26dp" />
 
             <TextView
-                android:layout_width="241dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="防  控  新  冠  肺  炎  疫  情"
                 android:textColor="@color/mdtp_date_picker_selector"
+                android:textAlignment="center"
                 android:textSize="20dp" />
 
 

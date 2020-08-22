@@ -28,161 +28,137 @@
                 android:layout_marginBottom="20dp"
                 android:src="@drawable/trace" />
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                app:passwordToggleEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/personal_mac_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_action_bluetooth"
+                    android:hint="本机MAC地址"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                app:passwordToggleEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/personal_phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_action_phone"
+                    android:hint="手机号码"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                app:passwordToggleEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/personal_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_action_home"
+                    android:hint="家庭住址"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
-                <androidx.cardview.widget.CardView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="设备编号："
+                    android:textSize="25sp" />
+
+                <TextView
+                    android:id="@+id/device_id_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
+                    android:gravity="right"
+                    android:text="608614166"
+                    android:textSize="25sp" />
 
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/mac_address_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="本机MAC地址：D8:CE:3A:86:DA:27"
-                        android:textSize="25dp">
-
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
-                <androidx.cardview.widget.CardView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="是否在隔离状态："
+                    android:textSize="25dp" />
+
+                <TextView
+                    android:id="@+id/is_segregate_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
+                    android:gravity="right"
+                    android:text="否"
+                    android:textSize="25dp" />
 
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/phone_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="手机号码：19121677361"
-                        android:textSize="25dp">
-
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
             </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
 
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/address_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="住址：上海市普陀区中山北路3663号"
-                        android:textSize="25dp">
-
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/device_id_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="设备编号：608614166"
-                        android:textSize="25dp">
-
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="horizontal">
 
-                <androidx.cardview.widget.CardView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="剩余隔离天数："
+                    android:textSize="25dp" />
+
+                <TextView
+                    android:id="@+id/left_segregate_time_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
+                    android:gravity="right"
+                    android:text="0"
+                    android:textSize="25dp" />
 
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/is_segregate_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="是否在隔离状态：否"
-                        android:textSize="25dp">
 
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
             </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="2dp"
-                    app:cardCornerRadius="10dp">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/left_segregate_time_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="剩余隔离时间0天"
-                        android:textSize="25dp">
-
-                    </com.google.android.material.textview.MaterialTextView>
-                </androidx.cardview.widget.CardView>
-            </LinearLayout>
-
-
 
             <Button
-                android:id="@+id/edit_submit_button"
+                android:id="@+id/personal_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="25dp"
-                android:layout_marginBottom="5dp"
-                android:background="@drawable/button_background_deep_blue"
-                android:text="修改资料"
-                android:textColor="@color/white" />
-            <Button
-                android:id="@+id/submit_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="25dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginBottom="5dp"
                 android:background="@drawable/button_background"
-                android:text="提交信息"
+                android:text="修改资料"
                 android:textColor="@color/white" />
+
+
 
         </LinearLayout>
 
