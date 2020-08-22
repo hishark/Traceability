@@ -393,7 +393,7 @@ public class JudgeActivity extends BaseActivity {
         editor.putInt("RISK_LEVEL", RISK_LEVEL);
         editor.apply();
         Log.i("log risk", "risk is"+RISK_LEVEL);
-        fence(RISK_LEVEL);
+//        fence(RISK_LEVEL);
         // 只要不是无风险，就显示【上传数据按钮】
         if (RISK_LEVEL != 0) {
             btnUploadData.setVisibility(View.VISIBLE);

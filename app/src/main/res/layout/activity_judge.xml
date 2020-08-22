@@ -24,9 +24,10 @@
             <TextView
                 android:layout_width="241dp"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:text="疫情风险等级查询"
                 android:textColor="@color/mdtp_white"
-                android:textSize="30dp" />
+                android:textSize="26dp" />
 
             <TextView
                 android:layout_width="241dp"

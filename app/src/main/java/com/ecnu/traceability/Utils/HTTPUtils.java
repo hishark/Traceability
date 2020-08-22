@@ -1,5 +1,6 @@
 package com.ecnu.traceability.Utils;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -47,7 +48,7 @@ import okio.ByteString;
 
 public class HTTPUtils {
     //    private static final String IP = "132.232.144.76";
-//    private static final String IP = "192.168.1.10";
+    //    private static final String IP = "192.168.1.10";
     private static final String IP = "192.168.43.242";
     public static final String TAG = "HTTPUtils";
     private static OkHttpClient client = new OkHttpClient.Builder()
@@ -471,6 +472,45 @@ public class HTTPUtils {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void pushIsolateStatus(DBHelper dbHelper, boolean is_in_isolate) {
+
+        String mac = OneNetDeviceUtils.macAddress;
+        String deviceId = "610475801";
+        List<LocalDevice> devices = dbHelper.getSession().getLocalDeviceDao().loadAll();
+        if (null != devices && devices.size() > 0) {
+            LocalDevice device = devices.get(0);
+            deviceId = device.getDeviceId();
+        }
+        String url = "http://" + IP + ":8080/TraceabilityServer/addIsolateStates";
+        JSONObject stateObj = new JSONObject();
+        try {
+            stateObj.put("deviceId", deviceId);
+            stateObj.put("mac", mac);
+            stateObj.put("state", is_in_isolate);
+//            JSONObject requestContent = new JSONObject();
+//            requestContent.putOpt("datastreams", stateObj);
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), stateObj.toString());
+            Log.e("pushIsolateStatus", stateObj.toString());
+            sendByOKHttp(url, requestBody, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e("addTransportationinfo", String.valueOf(e));
+                    Log.e("addTransportationinfo", "=================上传隔离状态失败=================");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    Log.e("addTransportationinfo", String.valueOf(response));
+                    Log.e("addTransportationinfo", "=================上传隔离状态成功=================");
+                }
+            });
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void getPatientMacAddress(Callback callback) {

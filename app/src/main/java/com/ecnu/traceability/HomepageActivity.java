@@ -43,6 +43,7 @@ import com.ecnu.traceability.judge.JudgeActivity;
 import com.ecnu.traceability.judge.RiskCheckService;
 import com.ecnu.traceability.location.Dao.LocationEntity;
 import com.ecnu.traceability.location.Dao.LocationEntityDao;
+import com.ecnu.traceability.location.service.FencesService;
 import com.ecnu.traceability.location.service.ILocationService;
 import com.ecnu.traceability.location.ui.MapActivity;
 import com.ecnu.traceability.location.ui.SchooleFenceActivity;
@@ -55,7 +56,9 @@ import com.ecnu.traceability.transportation.Transportation;
 import com.ecnu.traceability.ui.PersonalCenterAcitvity;
 import com.ecnu.traceability.ui.UserReportActivity;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -192,8 +195,29 @@ public class HomepageActivity extends BaseActivity {
             public void onMessage(String type, Object data) {
 //                String mac = OneNetDeviceUtils.macAddress;
                 if (data.toString().equals("隔离")) {
+                    // 更新sharedpreference中的风险等级
+                    SharedPreferences.Editor editor = getSharedPreferences("isolate_state", MODE_PRIVATE).edit();
+                    editor.putBoolean("is_in_isolate", true);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    editor.putString("time", sdf.format(new Date()));
+                    editor.apply();
+
+                    Intent fencesIntent = new Intent(HomepageActivity.this, FencesService.class);
+                    startService(fencesIntent);//开启围栏，出去围栏实时自动定位
+
+                    HTTPUtils.pushIsolateStatus(dbHelper, true);
+
                     GeneralUtils.showToastInService(HomepageActivity.this, "接收到隔离命令准备隔离");
-                } else {
+                }else if(data.toString().equals("解除隔离")){
+                    SharedPreferences.Editor editor = getSharedPreferences("isolate_state", MODE_PRIVATE).edit();
+                    editor.putBoolean("is_in_isolate", false);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    editor.putString("time", sdf.format(new Date()));
+                    editor.apply();
+                    HTTPUtils.pushIsolateStatus(dbHelper, false);
+                    GeneralUtils.showToastInService(HomepageActivity.this, "接收到解除隔离命令准备解除隔离");
+
+                }else {
                     Log.i(TAG, "onMessage: ============");
                     Log.i(TAG, type);
                     Log.i(TAG, "onMessage: " + data.toString());
@@ -205,6 +229,8 @@ public class HomepageActivity extends BaseActivity {
 
             }
         });
+
+//        HTTPUtils.pushIsolateStatus(dbHelper, true);
     }
 
 
@@ -376,6 +402,7 @@ public class HomepageActivity extends BaseActivity {
                 HTTPUtils.pushPieChartData(locationMap);//向OneNet发送地点统计（饼图）发送信息
                 HTTPUtils.pushBarChartData(dbHelper);//向OneNet发送柱状图统计信息
                 List<LocationEntity> locationList = dbHelper.getSession().getLocationEntityDao().queryBuilder().orderAsc(LocationEntityDao.Properties.Date).list();
+
                 List<LocationEntity> oneNetLocationList = new ArrayList<>();
                 if (locationList.size() > 100) {//多于100条数据进行精简
                     for (int i = 0; i < locationList.size(); i += locationList.size() / 100) {
