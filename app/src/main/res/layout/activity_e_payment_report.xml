@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ePayment.EPaymentReport">
+    android:gravity="center"
+    tools:context=".ui.EPaymentReportActivity">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -27,7 +28,7 @@
                 android:textStyle="bold"
                 android:textColor="@color/colorAccentTrans"
                 android:gravity="center"
-                android:textSize="40dp"
+                android:textSize="30dp"
                 android:text="支付位置上报">
 
             </androidx.appcompat.widget.AppCompatTextView>
@@ -40,7 +41,7 @@
                 app:passwordToggleEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/user_bluetooth_mac_address"
+                    android:id="@+id/et_pay_location"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawableLeft="@drawable/ic_location"
@@ -87,7 +88,7 @@
 <!--            </com.google.android.material.textfield.TextInputLayout>-->
 
             <Button
-                android:id="@+id/time_button"
+                android:id="@+id/pay_bt_timeselect"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="25dp"
@@ -97,7 +98,7 @@
                 android:textColor="@color/white" />
 
             <Button
-                android:id="@+id/submit_button"
+                android:id="@+id/pay_bt_submit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="25dp"
