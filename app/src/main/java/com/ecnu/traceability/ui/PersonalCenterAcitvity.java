@@ -2,7 +2,9 @@ package com.ecnu.traceability.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +20,12 @@ import com.ecnu.traceability.Utils.OneNetDeviceUtils;
 import com.ecnu.traceability.model.LocalDevice;
 import com.ecnu.traceability.model.User;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 public class PersonalCenterAcitvity extends BaseActivity {
     private DBHelper dbHelper = DBHelper.getInstance();
@@ -52,21 +59,21 @@ public class PersonalCenterAcitvity extends BaseActivity {
             etMac.setText("出错了");
         }
         String tel = "出错了";
-        String address="出错了";
+        String address = "出错了";
         List<User> users = dbHelper.getSession().getUserDao().loadAll();
         if (null != users && users.size() > 0) {
             User user = users.get(0);
             tel = user.getTel();
-            address=user.getAddress();
+            address = user.getAddress();
         }
         etPhone.setText(tel);
         etAddress.setText(address);
 
 
-        String deviceId="出错了";
+        String deviceId = "出错了";
         List<LocalDevice> deviceList = dbHelper.getSession().getLocalDeviceDao().loadAll();
-        if(null!=deviceList&&deviceList.size()>0){
-            deviceId= deviceList.get(0).getDeviceId();
+        if (null != deviceList && deviceList.size() > 0) {
+            deviceId = deviceList.get(0).getDeviceId();
         }
 
         devIdTv.setText(deviceId);
@@ -75,6 +82,20 @@ public class PersonalCenterAcitvity extends BaseActivity {
         // 初始状态下手机号和住址都无法更改
         etPhone.setEnabled(false);
         etAddress.setEnabled(false);
+
+        String isInIsolate = "否";
+        try {
+            isInIsolate = isInIsolateState() == true ? "是" : "否";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        is_segregate_Tv.setText(isInIsolate);
+        try {
+            int dayLeft = calIsolateDayLeft();
+            segregate_time_Tv.setText(dayLeft + "");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
         btEditInfo.setOnClickListener(new View.OnClickListener() {
@@ -124,6 +145,77 @@ public class PersonalCenterAcitvity extends BaseActivity {
             }
         });
 
+    }
+
+    public int daysBetween(Date smdate, Date bdate) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        smdate = sdf.parse(sdf.format(smdate));
+        bdate = sdf.parse(sdf.format(bdate));
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(smdate);
+        long time1 = cal.getTimeInMillis();
+        cal.setTime(bdate);
+        long time2 = cal.getTimeInMillis();
+        long between_days = (time2 - time1) / (1000 * 3600 * 24);
+
+        return Integer.parseInt(String.valueOf(between_days));
+    }
+
+    public boolean isInIsolateState() throws Exception {
+        SharedPreferences sharedPreferences = getSharedPreferences("isolate_state", MODE_PRIVATE);
+        boolean isInIsolate = sharedPreferences.getBoolean("is_in_isolate", false);
+
+        if (isInIsolate) {
+            String startTime = sharedPreferences.getString("time", "0");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+            if (!startTime.equals("0")) {
+                Date date = sdf.parse(startTime);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                calendar.add(Calendar.DATE, 14);
+
+                Date now = new Date();
+
+                int dayLeft = daysBetween(sdf.parse(sdf.format(now)), calendar.getTime());
+
+                if (dayLeft > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+
+        } else {
+            return false;
+        }
+        return false;
+    }
+
+    private int calIsolateDayLeft() throws Exception {
+        SharedPreferences sharedPreferences = getSharedPreferences("isolate_state", MODE_PRIVATE);
+        boolean isInIsolate = sharedPreferences.getBoolean("is_in_isolate", false);
+        if (isInIsolate) {
+            String startTime = sharedPreferences.getString("time", "0");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+            if (!startTime.equals("0")) {
+                Date date = sdf.parse(startTime);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                calendar.add(Calendar.DATE, 14);
+
+                Date now = new Date();
+                return daysBetween(sdf.parse(sdf.format(now)), calendar.getTime());
+            }
+
+        } else {
+            return 0;
+        }
+        return 0;
     }
 
     // 更新用户信息

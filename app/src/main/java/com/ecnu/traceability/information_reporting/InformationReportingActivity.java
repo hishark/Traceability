@@ -66,7 +66,7 @@ public class InformationReportingActivity extends AppCompatActivity implements B
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_information_reporting);
-        setTitle("");
+        setTitle("信息上报");
         findViewById(R.id.info_reporting_btn).setOnClickListener(this);
         dbHelper.init(this);
         oneNetDataSender = new InfoToOneNet(dbHelper);//发送到OneNet信息的工具类

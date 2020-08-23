@@ -35,6 +35,8 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".ui.PublicTransUi"></activity>
+        <activity android:name=".ui.EPaymentShow" />
         <activity
             android:name=".SignupActivity"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -73,9 +75,9 @@
         <activity android:name=".transportation.TransportationInfoReport" />
         <activity android:name=".ui.PersonalCenterAcitvity" />
         <activity android:name=".ePayment.EPaymentReportActivity" />
-        <activity android:name=".ui.UserReportActivity"/>
-        <activity android:name=".ui.EPaymentReportActivity"/>
-        <activity android:name=".ui.PublicTransportationReportActivity"/>
+        <activity android:name=".ui.UserReportActivity" />
+        <activity android:name=".ui.EPaymentReportActivity" />
+        <activity android:name=".ui.PublicTransportationReportActivity" />
 
         <service android:name="com.amap.api.location.APSService" /> <!-- 忘记添加服务的标签时不报错，但是不运行 -->
         <service

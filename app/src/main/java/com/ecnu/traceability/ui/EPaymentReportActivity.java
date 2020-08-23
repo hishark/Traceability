@@ -111,7 +111,7 @@ public class EPaymentReportActivity  extends BaseActivity implements GeocodeSear
                     dateProcessed=null;
                 }
                 EPaymentEntity entity = new EPaymentEntity();
-                dbHelper.getSession().getEPaymentEntityDao().insert(entity);
+                //dbHelper.getSession().getEPaymentEntityDao().insert(entity);
 
                 locationToLatlon(etPayLoc.getText().toString().trim());
 

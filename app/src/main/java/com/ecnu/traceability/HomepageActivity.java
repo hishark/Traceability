@@ -53,14 +53,18 @@ import com.ecnu.traceability.model.User;
 import com.ecnu.traceability.transportation.Dao.TransportationEntity;
 import com.ecnu.traceability.transportation.Dao.TransportationEntityDao;
 import com.ecnu.traceability.transportation.Transportation;
+import com.ecnu.traceability.ui.EPaymentShow;
 import com.ecnu.traceability.ui.PersonalCenterAcitvity;
+import com.ecnu.traceability.ui.PublicTransUi;
 import com.ecnu.traceability.ui.UserReportActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class HomepageActivity extends BaseActivity {
     private static final String TAG = "HomepageActivity";
@@ -114,6 +118,21 @@ public class HomepageActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 startActivity(PersonalCenterAcitvity.class);
+            }
+        });
+
+        findViewById(R.id.e_pay_location_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(EPaymentShow.class);
+            }
+        });
+
+        findViewById(R.id.pub_trans_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(PublicTransUi.class);
+
             }
         });
 
@@ -208,16 +227,16 @@ public class HomepageActivity extends BaseActivity {
                     HTTPUtils.pushIsolateStatus(dbHelper, true);
 
                     GeneralUtils.showToastInService(HomepageActivity.this, "接收到隔离命令准备隔离");
-                }else if(data.toString().equals("解除隔离")){
+                } else if (data.toString().equals("解除隔离")) {
                     SharedPreferences.Editor editor = getSharedPreferences("isolate_state", MODE_PRIVATE).edit();
                     editor.putBoolean("is_in_isolate", false);
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    editor.putString("time", sdf.format(new Date()));
+                    editor.putString("time", "0");
                     editor.apply();
                     HTTPUtils.pushIsolateStatus(dbHelper, false);
                     GeneralUtils.showToastInService(HomepageActivity.this, "接收到解除隔离命令准备解除隔离");
 
-                }else {
+                } else {
                     Log.i(TAG, "onMessage: ============");
                     Log.i(TAG, type);
                     Log.i(TAG, "onMessage: " + data.toString());
@@ -445,4 +464,77 @@ public class HomepageActivity extends BaseActivity {
         }
     };
 //    ---------------------------------------------Messager回调函数结束-------------------------------------------------
+
+    public int daysBetween(Date smdate, Date bdate) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        smdate = sdf.parse(sdf.format(smdate));
+        bdate = sdf.parse(sdf.format(bdate));
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(smdate);
+        long time1 = cal.getTimeInMillis();
+        cal.setTime(bdate);
+        long time2 = cal.getTimeInMillis();
+        long between_days = (time2 - time1) / (1000 * 3600 * 24);
+
+        return Integer.parseInt(String.valueOf(between_days));
+    }
+
+    public boolean isInIsolateState() throws Exception {
+        SharedPreferences sharedPreferences = getSharedPreferences("isolate_state", MODE_PRIVATE);
+        boolean isInIsolate = sharedPreferences.getBoolean("is_in_isolate", false);
+
+        if (isInIsolate) {
+            String startTime = sharedPreferences.getString("time", "0");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+            if (!startTime.equals("0")) {
+                Date date = sdf.parse(startTime);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                calendar.add(Calendar.DATE, 14);
+
+                Date now = new Date();
+
+                int dayLeft = daysBetween(sdf.parse(sdf.format(now)), calendar.getTime());
+
+                if (dayLeft > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+
+        } else {
+            return false;
+        }
+        return false;
+    }
+
+    private int calIsolateDayLeft() throws Exception {
+        SharedPreferences sharedPreferences = getSharedPreferences("isolate_state", MODE_PRIVATE);
+        boolean isInIsolate = sharedPreferences.getBoolean("is_in_isolate", false);
+        if (isInIsolate) {
+            String startTime = sharedPreferences.getString("time", "0");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT+08"));
+            if (!startTime.equals("0")) {
+                Date date = sdf.parse(startTime);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+                calendar.add(Calendar.DATE, 14);
+
+                Date now = new Date();
+                return daysBetween(sdf.parse(sdf.format(now)), calendar.getTime());
+            }
+
+        } else {
+            return 0;
+        }
+        return 0;
+    }
+
+
 }
